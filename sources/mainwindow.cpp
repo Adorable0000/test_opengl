@@ -32,7 +32,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
 MainWindow::~MainWindow()
 {
-  graph0 = nullptr;
 //  graph1 = nullptr;
   glplot0 = nullptr;
 }

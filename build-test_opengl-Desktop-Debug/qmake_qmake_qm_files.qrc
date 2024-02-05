@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="i18n">
+<file alias="test_opengl_ru_RU.qm">/home/smely/test_opengl/build-test_opengl-Desktop-Debug/.qm/test_opengl_ru_RU.qm</file>
+</qresource>
+</RCC>

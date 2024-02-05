@@ -25,8 +25,9 @@ QMAKE_CXXFLAGS_RELEASE += -O3
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
-SOURCES += $$files("../test_opengl/*.cpp", true)
-HEADERS += $$files("../test_opengl/*.h", true)
+SOURCES += $$files("../sources/*.cpp", true)
+HEADERS += $$files("../sources/*.h", true)
+TRANSLATIONS += $$files("../test_opengl/*.ts", true)
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -11,15 +11,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   QGridLayout *grid = new QGridLayout();
   wgt->setLayout(grid);
 
-//  graph0 = new QCustomPlot();
-//  graph0->setOpenGl(true);
-//  graph1 = new QCustomPlot();
-//  graph1->setOpenGl(true);
-//  graph0->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::MinimumExpanding);
-//  graph1->setSizePolicy(QSizePolicy::Policy::Expanding,QSizePolicy::Policy::MinimumExpanding);
-
-//  grid->addWidget(graph0, 0, 0, 1, 1);
-//  grid->addWidget(graph1, 1, 0, 1, 1);
   glplot0 = new OpenGLPlot();
 //  glplot1 = new OpenGLPlot();
   grid->addWidget(glplot0,0,0,1,1);

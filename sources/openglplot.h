@@ -24,6 +24,9 @@ private:
   GLdouble LiveVertex[200000][2];
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   std::vector<drawData> paintData;
+  bool dataChanged;
+  double xMax;
+  double yMax;
 
 };
 

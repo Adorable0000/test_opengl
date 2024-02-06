@@ -16,12 +16,14 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 //      LiveVertex[i][1] = 0;
 //    }
 //  LiveVertex[100000][1] = (LiveVertex[100000-1][1] + LiveVertex[100000+1][1])/2;
-  for(int i = 0; i < 20000; i++)
+  for(int i = 0; i < 200000; i++)
     {
       LiveVertex[i][0] = i;
       LiveVertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
     }
-
+  dataChanged = true;
+  xMax = 5;
+  yMax = 5;
 //  LiveVertex[100000][1] = 100000;
 //  LiveVertex[99999][1] = 99999;
 //  LiveVertex[10000][1] = 10000;
@@ -38,12 +40,20 @@ OpenGLPlot::~OpenGLPlot()
 void OpenGLPlot::initializeGL()
 {
   glClearColor(255,255,255,255);
-//  glEnable(GL_LINE_STIPPLE);
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 }
 
 
 void OpenGLPlot::resizeGL(int width, int height)
 {
+//  if(dataChanged)
+//    {
+//      xMax = *std::max_element(std::begin(paintData.at(0).xData), std::end(paintData.at(0).xData));
+//      yMax = *std::max_element(std::begin(paintData.at(0).yData), std::end(paintData.at(0).yData));
+//    }
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glViewport(0, 0, (GLint)width, (GLint)height);
@@ -59,7 +69,6 @@ void OpenGLPlot::paintGL()
   glLoadIdentity();
   glEnableClientState(GL_VERTEX_ARRAY);
   glColor3f(0, 0, 255);
-//  glLineStipple(1, 0x00FF);
   glVertexPointer(2, GL_DOUBLE, 0, &LiveVertex);
   glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, 20000);
   glDisableClientState(GL_VERTEX_ARRAY);
@@ -78,6 +87,7 @@ void OpenGLPlot::addData(std::vector<double> keys, std::vector<double> values, i
   paintData.at(graph).yData.resize(values.size());
   memmove(paintData.at(graph).xData.data(), keys.data(), keys.size());
   memmove(paintData.at(graph).yData.data(), values.data(), values.size());
+  dataChanged = true;
 }
 
 
@@ -86,3 +96,5 @@ void OpenGLPlot::addGraph()
   drawData draw;
   paintData.push_back(draw);
 }
+
+

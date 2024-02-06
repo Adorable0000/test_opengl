@@ -27,7 +27,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += $$files("../sources/*.cpp", true)
 HEADERS += $$files("../sources/*.h", true)
+SOURCES += $$files("../app/*.cpp", true)
 TRANSLATIONS += $$files("../test_opengl/*.ts", true)
+
+INCLUDEPATH += ../sources
+INCLUDEPATH += ../app
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

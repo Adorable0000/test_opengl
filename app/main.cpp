@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include<stdio.h>
+#include <stdio.h>
 
 #include <QApplication>
 #include <QLocale>

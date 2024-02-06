@@ -4,4 +4,4 @@ build*
 
 # Игнорируем user файлы
 
-.user
+*.user

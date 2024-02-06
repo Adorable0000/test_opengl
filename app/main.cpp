@@ -3,7 +3,7 @@
 
 #include <QApplication>
 #include <QLocale>
-#include<qstylefactory.h>
+#include <qstylefactory.h>
 
 
 int main(int argc, char *argv[])

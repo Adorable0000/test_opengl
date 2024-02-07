@@ -42,16 +42,4 @@ void MainWindow::replot()
 //    y1[i] = (double)(sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
 //    x1[i] = (double)i;
 //  }
-
-//  graph0->addGraph();
-//  graph0->graph(0)->setData(x1, y1);
-//  graph0->xAxis->setRange(0,20000);
-//  graph0->yAxis->setRange(0,4100);
-//  graph1->addGraph();
-//  graph1->addGraph();
-//  graph1->graph(1)->setData(x1,y1);
-//  graph1->xAxis->setRange(0,100000);
-//  graph1->yAxis->setRange(0,100000);
-//  graph0->replot();
-//  graph1->replot();
 }

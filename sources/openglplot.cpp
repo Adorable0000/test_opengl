@@ -23,8 +23,10 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
       LiveVertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
     }
   dataChanged = false;
-  xMax = 5;
-  yMax = 5;
+  drawAxis.xRange.lower = 0;
+  drawAxis.xRange.upper = 5;
+  drawAxis.yRange.lower = 0;
+  drawAxis.yRange.upper = 5;
 }
 
 
@@ -57,6 +59,7 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 void OpenGLPlot::paintGL()
 {
+
   makeCurrent();
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
@@ -81,8 +84,12 @@ void OpenGLPlot::addData(std::vector<double> keys, std::vector<double> values)
     {
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
-      xMax = *std::max_element(paintData.xData.begin(), paintData.xData.end());
-      yMax = *std::max_element(paintData.yData.begin(), paintData.yData.end());
+//      xMax = *std::max_element(paintData.xData.begin(), paintData.xData.end());
+//      yMax = *std::max_element(paintData.yData.begin(), paintData.yData.end());
+      drawAxis.xRange.lower = *std::min_element(keys.begin(), keys.end());
+      drawAxis.xRange.upper = *std::max_element(keys.begin(), keys.end());
+      drawAxis.yRange.lower = *std::min_element(values.begin(), values.end());
+      drawAxis.yRange.upper = *std::max_element(values.begin(), values.end());
     }
   memmove(paintData.xData.data(), keys.data(), paintData.xData.size());
   memmove(paintData.yData.data(), values.data(), paintData.yData.size());

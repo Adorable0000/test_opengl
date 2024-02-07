@@ -25,9 +25,12 @@ private:
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   drawData paintData;
   std::vector<drawData> paintBuf;
+  struct Range{double lower; double upper;};
+  struct Axis{Range xRange; Range yRange;};
+  Axis drawAxis;
   bool dataChanged;
-  double xMax;
-  double yMax;
+//  double xMax;
+//  double yMax;
 
 };
 

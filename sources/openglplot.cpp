@@ -59,7 +59,6 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 void OpenGLPlot::paintGL()
 {
-
   makeCurrent();
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);

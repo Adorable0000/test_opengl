@@ -1,9 +1,10 @@
 #include "openglplot.h"
 #include <math.h>
+#include <iostream>
 
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
-//  makeCurrent();
+  makeCurrent();
 //  for(int i = 0; i < 100000; i++)
 //    {
 //      LiveVertex[i][0] = i;
@@ -15,24 +16,22 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 //    {
 //      LiveVertex[i][1] = 0;
 //    }
-//  LiveVertex[100000][1] = (LiveVertex[100000-1][1] + LiveVertex[100000+1][1])/2;
+//  LiveVertex[10000][1] = (LiveVertex[100000-1][1] + LiveVertex[100000+1][1])/2;
   for(int i = 0; i < 200000; i++)
     {
       LiveVertex[i][0] = i;
       LiveVertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
     }
-  dataChanged = true;
+  dataChanged = false;
   xMax = 5;
   yMax = 5;
-//  LiveVertex[100000][1] = 100000;
-//  LiveVertex[99999][1] = 99999;
-//  LiveVertex[10000][1] = 10000;
 }
 
 
 OpenGLPlot::~OpenGLPlot()
 {
-//  glDisable(GL_LINE_STIPPLE);
+  glDisable(GL_LINE_SMOOTH);
+  glDisable(GL_BLEND);
   makeCurrent();
 }
 
@@ -43,17 +42,12 @@ void OpenGLPlot::initializeGL()
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
 }
 
 
 void OpenGLPlot::resizeGL(int width, int height)
 {
-//  if(dataChanged)
-//    {
-//      xMax = *std::max_element(std::begin(paintData.at(0).xData), std::end(paintData.at(0).xData));
-//      yMax = *std::max_element(std::begin(paintData.at(0).yData), std::end(paintData.at(0).yData));
-//    }
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glViewport(0, 0, (GLint)width, (GLint)height);
@@ -75,26 +69,22 @@ void OpenGLPlot::paintGL()
 }
 
 
-void OpenGLPlot::addData(std::vector<double> keys, std::vector<double> values, int graph)
+void OpenGLPlot::addData(std::vector<double> keys, std::vector<double> values)
 {
-  if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()) || (graph < 0))
+  if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()))
     {
       return;
     }
-  paintData.at(graph).xData.clear();
-  paintData.at(graph).yData.clear();
-  paintData.at(graph).xData.resize(keys.size());
-  paintData.at(graph).yData.resize(values.size());
-  memmove(paintData.at(graph).xData.data(), keys.data(), keys.size());
-  memmove(paintData.at(graph).yData.data(), values.data(), values.size());
+  paintData.xData.clear();
+  paintData.yData.clear();
+  if(paintData.xData.size() != keys.size())
+    {
+      paintData.xData.resize(keys.size());
+      paintData.yData.resize(values.size());
+      xMax = *std::max_element(paintData.xData.begin(), paintData.xData.end());
+      yMax = *std::max_element(paintData.yData.begin(), paintData.yData.end());
+    }
+  memmove(paintData.xData.data(), keys.data(), paintData.xData.size());
+  memmove(paintData.yData.data(), values.data(), paintData.yData.size());
   dataChanged = true;
 }
-
-
-void OpenGLPlot::addGraph()
-{
-  drawData draw;
-  paintData.push_back(draw);
-}
-
-

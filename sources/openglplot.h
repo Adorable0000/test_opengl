@@ -12,7 +12,7 @@ class OpenGLPlot : public QOpenGLWidget
 public:
   OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
-  void addData(std::vector<double> keys, std::vector<double> values, int graph);
+  void addData(std::vector<double> keys, std::vector<double> values);
   void addGraph();
 
 protected:
@@ -23,7 +23,8 @@ protected:
 private:
   GLdouble LiveVertex[200000][2];
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
-  std::vector<drawData> paintData;
+  drawData paintData;
+  std::vector<drawData> paintBuf;
   bool dataChanged;
   double xMax;
   double yMax;

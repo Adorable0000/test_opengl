@@ -15,3 +15,4 @@ Hardware support for OpenGL version higher than 2.0
 	- Add grid
 - Add the ability to put two graphs in one plot
 - Add wheel and mouse press events
+- Add rescaling

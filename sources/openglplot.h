@@ -3,7 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-#include <vector>
+
 
 class OpenGLPlot : public QOpenGLWidget
 {

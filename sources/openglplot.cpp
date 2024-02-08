@@ -1,6 +1,6 @@
 #include "openglplot.h"
 #include <math.h>
-#include <iostream>
+
 
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
@@ -41,30 +41,44 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glViewport(0, 0, (GLint)width, (GLint)height);
-  glOrtho(0, 20000, -1, 4100, -1, 1);
+//  glOrtho(drawAxis.xRange.lower, drawAxis.xRange.upper, drawAxis.yRange.lower-1, drawAxis.yRange.upper, -1, 1);
+//  glOrtho(0, 20000, -1, 4100, -1, 1);
 }
 
 
 void OpenGLPlot::paintGL()
 {
-  GLdouble Vertex[200000][2];
+  makeCurrent();
+  GLdouble Vertex[paintData.xData.size()][2];
   if(dataChanged)
     {
-      for(int i = 0; i < 200000; i++)
+      for(int i = drawAxis.xRange.lower; i < drawAxis.xRange.upper; i++)
         {
-          Vertex[i][0] = i;
-          Vertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+          Vertex[i][0] = paintData.xData[i];
+          Vertex[i][1] = paintData.yData[i];
         }
       dataChanged = false;
     }
-  makeCurrent();
+//  GLdouble Vertex[20000][2];
+//  if(dataChanged)
+//    {
+//      for(int i = 0; i < 20000; i++)
+//        {
+//          Vertex[i][0] = i;
+//          Vertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+//        }
+//      dataChanged = false;
+//    }
+  glOrtho(drawAxis.xRange.lower, drawAxis.xRange.upper, drawAxis.yRange.lower, drawAxis.yRange.upper, -1, 1);
+//  glOrtho(0, 20000, -1, 4100, -1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glEnableClientState(GL_VERTEX_ARRAY);
   glColor3f(0, 0, 255);
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, 20000);
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, drawAxis.xRange.upper);
+//  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, 20000);
   glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -81,10 +95,10 @@ void OpenGLPlot::addData(std::vector<double> keys, std::vector<double> values)
     {
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
-      drawAxis.xRange.lower = *std::min_element(keys.begin(), keys.end());
-      drawAxis.xRange.upper = *std::max_element(keys.begin(), keys.end());
-      drawAxis.yRange.lower = *std::min_element(values.begin(), values.end());
-      drawAxis.yRange.upper = *std::max_element(values.begin(), values.end());
+      drawAxis.xRange.lower = keys[0];
+      drawAxis.xRange.upper = keys.size();
+      drawAxis.yRange.lower = std::floor(*std::min_element(values.begin(), values.end())) - 1;
+      drawAxis.yRange.upper = std::ceil(*std::max_element(values.begin(), values.end())) + 1;
     }
   memmove(paintData.xData.data(), keys.data(), paintData.xData.size());
   memmove(paintData.yData.data(), values.data(), paintData.yData.size());

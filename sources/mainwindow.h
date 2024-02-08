@@ -5,6 +5,9 @@
 #include <QTimer>
 #include <QGridLayout>
 #include "openglplot.h"
+#include <vector>
+#include <math.h>
+#include <iostream>
 
 
 class MainWindow : public QMainWindow

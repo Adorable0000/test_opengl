@@ -13,7 +13,7 @@ public:
   OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
   void addData(std::vector<double> keys, std::vector<double> values);
-  void addGraph();
+//  void addGraph();
 
 protected:
   void initializeGL() override;
@@ -21,7 +21,7 @@ protected:
   void paintGL() override;
 
 private:
-  GLdouble LiveVertex[200000][2];
+//  GLdouble LiveVertex[200000][2];
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   drawData paintData;
   std::vector<drawData> paintBuf;

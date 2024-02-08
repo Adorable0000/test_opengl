@@ -20,6 +20,10 @@ public:
 //  QCustomPlot *graph1;
   OpenGLPlot *glplot0;
   OpenGLPlot *glplot1;
+
+  std::vector<double> x;
+  std::vector<double> y;
+
 public slots:
   void replot();
 };

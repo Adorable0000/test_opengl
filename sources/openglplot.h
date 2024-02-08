@@ -12,7 +12,7 @@ class OpenGLPlot : public QOpenGLWidget
 public:
   OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
-  void addData(std::vector<double> keys, std::vector<double> values);
+  void addData(std::vector<double> &keys, std::vector<double> &values);
 //  void addGraph();
 
 protected:

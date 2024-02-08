@@ -5,6 +5,7 @@ This is just a plain plotter made for real-time plotting with Qt, using OpenGL
 <h3> Requirements </h3>
 
 Qt, version higher than 4
+Hardware support for OpenGL version higher than 2.0
 
 <h3> TODO </h3>
 

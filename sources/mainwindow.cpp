@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
   QTimer *timer = new QTimer(this);
   timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
-  timer->start(1000);
+  timer->start(10);
 }
 
 MainWindow::~MainWindow()
@@ -43,7 +43,9 @@ void MainWindow::replot()
       a++;
     }
   glplot0->addData(x, y);
+//  glplot1->addData(x, y);
   glplot0->update();
+//  glplot1->update();
 //  printf("Width %d ", glplot0->width());
 //  printf("Height %d \n", glplot0->height());
 

@@ -28,7 +28,7 @@ private:
 //  std::vector<drawData> paintBuf;
   struct Range{double lower; double upper;};
   struct Axis{Range xRange; Range yRange;};
-  Axis drawAxis;
+  Axis sizeAxis;
   bool dataChanged;
 //  double xMax;
 //  double yMax;

@@ -16,6 +16,18 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   grid->addWidget(glplot0,0,0,1,1);
 //  grid->addWidget(glplot1,1,0,1,1);
 
+  x1.resize(20000);
+  y1.resize(20000);
+  x2.resize(20000);
+  y2.resize(20000);
+  for(int i = 0; i < 20000; i++)
+  {
+    x1[i] = i;
+    y1[i] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+    x2[i] = i;
+    y2[i] = (cos(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+  }
+
   QTimer *timer = new QTimer(this);
   timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
   timer->start(10);
@@ -25,25 +37,14 @@ MainWindow::~MainWindow()
 {
 //  graph1 = nullptr;
   glplot0 = nullptr;
+  glplot1 = nullptr;
 }
 
-int a = 0;
 
 void MainWindow::replot()
 {
-  if(a == 0)
-    {
-      x.resize(20000);
-      y.resize(20000);
-      for(int i = 0; i < 20000; i++)
-      {
-        y[i] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
-        x[i] = i;
-      }
-      a++;
-    }
-  glplot0->addData(x, y);
-//  glplot1->addData(x, y);
+  glplot0->addData(x1, y1);
+//  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();
 //  printf("Width %d ", glplot0->width());

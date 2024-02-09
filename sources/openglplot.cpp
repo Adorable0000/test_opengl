@@ -11,16 +11,26 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 //      LiveVertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
 //    }
   dataChanged = true;
-  drawAxis.xRange.lower = 0;
-  drawAxis.xRange.upper = 5;
-  drawAxis.yRange.lower = 0;
-  drawAxis.yRange.upper = 5;
-  paintData.xData.resize(5);
-  paintData.yData.resize(5);
-  drawAxis.xRange.lower = 0;
-  drawAxis.xRange.upper = 5;
-  drawAxis.yRange.lower = 0;
-  drawAxis.yRange.upper = 5;
+//  sizeAxis.xRange.lower = 0;
+//  sizeAxis.xRange.upper = 5;
+//  sizeAxis.yRange.lower = 0;
+//  sizeAxis.yRange.upper = 5;
+//  paintData.xData.resize(5);
+//  paintData.yData.resize(5);
+//  sizeAxis.xRange.lower = 0;
+//  sizeAxis.xRange.upper = 5;
+//  sizeAxis.yRange.lower = 0;
+//  sizeAxis.yRange.upper = 5;
+  sizeAxis.xRange.lower = 0;
+  sizeAxis.xRange.upper = 20000;
+  sizeAxis.yRange.lower = 0;
+  sizeAxis.yRange.upper = 20000;
+  paintData.xData.resize(20000);
+  paintData.yData.resize(20000);
+  sizeAxis.xRange.lower = 0;
+  sizeAxis.xRange.upper = 20000;
+  sizeAxis.yRange.lower = -1;
+  sizeAxis.yRange.upper = 4100;
 }
 
 
@@ -47,20 +57,19 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glViewport(0, 0, (GLint)width, (GLint)height);
-  glOrtho(drawAxis.xRange.lower, drawAxis.xRange.upper, drawAxis.yRange.lower-1, drawAxis.yRange.upper, -1, 1);
+  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);
 //  glOrtho(0, 20000, -1, 4100, -1, 1);
 }
 
 
 void OpenGLPlot::paintGL()
 {
-  makeCurrent();
   GLdouble Vertex[paintData.xData.size()][2];
   if(dataChanged)
     {
-      for(int i = drawAxis.xRange.lower; i < drawAxis.xRange.upper; i++)
+      for(int i = (int)sizeAxis.xRange.lower; i < (int)sizeAxis.xRange.upper; i++)
         {
-          Vertex[i][0] = paintData.xData[i];
+          Vertex[i][0] = /*paintData.xData[i]*/ i;
           Vertex[i][1] = paintData.yData[i];
         }
       dataChanged = false;
@@ -75,9 +84,10 @@ void OpenGLPlot::paintGL()
 //        }
 //      dataChanged = false;
 //    }
+  makeCurrent();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(drawAxis.xRange.lower, drawAxis.xRange.upper, drawAxis.yRange.lower, drawAxis.yRange.upper, -1, 1);
+  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);
 //  glOrtho(0, 20000, -1, 4100, -1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
@@ -85,8 +95,8 @@ void OpenGLPlot::paintGL()
   glEnableClientState(GL_VERTEX_ARRAY);
   glColor3f(0, 0, 255);
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, drawAxis.xRange.lower, drawAxis.xRange.upper);
-//  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, 20000);
+//  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, sizeAxis.xRange.lower, sizeAxis.xRange.upper);
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, 20000);
   glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -103,10 +113,10 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     {
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
-      drawAxis.xRange.lower = keys[0];
-      drawAxis.xRange.upper = keys.size();
-      drawAxis.yRange.lower = std::floor(*std::min_element(values.begin(), values.end())) - 1;
-      drawAxis.yRange.upper = std::ceil(*std::max_element(values.begin(), values.end())) + 1;
+      sizeAxis.xRange.lower = keys[0];
+      sizeAxis.xRange.upper = keys.size();
+      sizeAxis.yRange.lower = std::floor(*std::min_element(values.begin(), values.end())) - 1;
+      sizeAxis.yRange.upper = std::ceil(*std::max_element(values.begin(), values.end())) + 1;
     }
   memmove(paintData.xData.data(), keys.data(), keys.size());
   memmove(paintData.yData.data(), values.data(), values.size());

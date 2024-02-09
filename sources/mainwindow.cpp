@@ -23,7 +23,9 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   for(int i = 0; i < 20000; i++)
   {
     x1[i] = i;
+//    printf(" %f\n", x1[i]);
     y1[i] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+//    printf(" %f\n", y1[i]);
     x2[i] = i;
     y2[i] = (cos(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
   }

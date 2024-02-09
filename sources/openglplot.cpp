@@ -70,7 +70,8 @@ void OpenGLPlot::paintGL()
       for(int i = (int)sizeAxis.xRange.lower; i < (int)sizeAxis.xRange.upper; i++)
         {
           Vertex[i][0] = /*paintData.xData[i]*/ i;
-          Vertex[i][1] = paintData.yData[i];
+          printf(" %f\n", paintData.xData[i]);
+          Vertex[i][1] = /*paintData.yData[i]*/ (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
         }
       dataChanged = false;
     }

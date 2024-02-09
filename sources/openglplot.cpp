@@ -11,26 +11,16 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 //      LiveVertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
 //    }
   dataChanged = true;
-//  sizeAxis.xRange.lower = 0;
-//  sizeAxis.xRange.upper = 5;
-//  sizeAxis.yRange.lower = 0;
-//  sizeAxis.yRange.upper = 5;
-//  paintData.xData.resize(5);
-//  paintData.yData.resize(5);
-//  sizeAxis.xRange.lower = 0;
-//  sizeAxis.xRange.upper = 5;
-//  sizeAxis.yRange.lower = 0;
-//  sizeAxis.yRange.upper = 5;
   sizeAxis.xRange.lower = 0;
-  sizeAxis.xRange.upper = 20000;
+  sizeAxis.xRange.upper = 5;
   sizeAxis.yRange.lower = 0;
-  sizeAxis.yRange.upper = 20000;
-  paintData.xData.resize(20000);
-  paintData.yData.resize(20000);
+  sizeAxis.yRange.upper = 5;
+  paintData.xData.resize(5);
+  paintData.yData.resize(5);
   sizeAxis.xRange.lower = 0;
-  sizeAxis.xRange.upper = 20000;
-  sizeAxis.yRange.lower = -1;
-  sizeAxis.yRange.upper = 4100;
+  sizeAxis.xRange.upper = 5;
+  sizeAxis.yRange.lower = 0;
+  sizeAxis.yRange.upper = 5;
 }
 
 

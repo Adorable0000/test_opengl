@@ -23,8 +23,8 @@ protected:
   void initializeGL() override;
   void resizeGL(int width, int height) override;
   void paintGL() override;
-  void wheelEvent(QWheelEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
+
+  bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
   struct drawData{std::vector<double> xData; std::vector<double> yData;};

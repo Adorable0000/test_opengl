@@ -98,10 +98,12 @@ void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
   sizeAxis.yRange.upper = ymax + 1;
 }
 
+
 void OpenGLPlot::gridVisible(bool state)
 {
   showGrid = state;
 }
+
 
 void OpenGLPlot::axisVisible(bool state)
 {
@@ -109,15 +111,9 @@ void OpenGLPlot::axisVisible(bool state)
 }
 
 
-void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
+bool OpenGLPlot::eventFilter(QObject *obj, QEvent *event)
 {
-  printf("mouse moved\n");
-}
 
-
-void OpenGLPlot::wheelEvent(QWheelEvent *event)
-{
-  printf("wheel moved\n");
 }
 
 

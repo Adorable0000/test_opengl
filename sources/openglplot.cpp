@@ -5,11 +5,6 @@
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   makeCurrent();
-//  for(int i = 0; i < 200000; i++)
-//    {
-//      LiveVertex[i][0] = i;
-//      LiveVertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
-//    }
   dataChanged = true;
   sizeAxis.xRange.lower = 0;
   sizeAxis.xRange.upper = 5;
@@ -59,35 +54,22 @@ void OpenGLPlot::paintGL()
     {
       for(int i = (int)sizeAxis.xRange.lower; i < (int)sizeAxis.xRange.upper; i++)
         {
-          Vertex[i][0] = /*paintData.xData[i]*/ i;
-          printf(" %f\n", paintData.xData[i]);
-          Vertex[i][1] = /*paintData.yData[i]*/ (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+          Vertex[i][0] = paintData.xData[i];
+          Vertex[i][1] = paintData.yData[i];
         }
       dataChanged = false;
     }
-//  GLdouble Vertex[20000][2];
-//  if(dataChanged)
-//    {
-//      for(int i = 0; i < 20000; i++)
-//        {
-//          Vertex[i][0] = i;
-//          Vertex[i][1] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
-//        }
-//      dataChanged = false;
-//    }
   makeCurrent();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);
-//  glOrtho(0, 20000, -1, 4100, -1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glEnableClientState(GL_VERTEX_ARRAY);
   glColor3f(0, 0, 255);
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);
-//  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, sizeAxis.xRange.lower, sizeAxis.xRange.upper);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, 20000);
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, sizeAxis.xRange.lower, sizeAxis.xRange.upper);
   glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -109,7 +91,7 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
       sizeAxis.yRange.lower = std::floor(*std::min_element(values.begin(), values.end())) - 1;
       sizeAxis.yRange.upper = std::ceil(*std::max_element(values.begin(), values.end())) + 1;
     }
-  memmove(paintData.xData.data(), keys.data(), keys.size());
-  memmove(paintData.yData.data(), values.data(), values.size());
+  memmove(paintData.xData.data(), keys.data(), keys.size() * sizeof (double));
+  memmove(paintData.yData.data(), values.data(), values.size() * sizeof (double));
   dataChanged = true;
 }

@@ -1,11 +1,11 @@
 #include "mainwindow.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
-
   QWidget *wgt = new QWidget();
   this->setCentralWidget(wgt);
   QGridLayout *grid = new QGridLayout();
@@ -23,9 +23,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   for(int i = 0; i < 20000; i++)
   {
     x1[i] = i;
-//    printf(" %f\n", x1[i]);
     y1[i] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
-//    printf(" %f\n", y1[i]);
     x2[i] = i;
     y2[i] = (cos(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
   }
@@ -45,18 +43,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::replot()
 {
+  double time1 = clock() / (double)CLOCKS_PER_SEC;
+
   glplot0->addData(x1, y1);
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();
-//  printf("Width %d ", glplot0->width());
-//  printf("Height %d \n", glplot0->height());
 
-//  QVector<double> x1(20000);
-//  QVector<double> y1(20000);
-//  for(int i = 0; i < 20000; i++)
-//  {
-//    y1[i] = (double)(sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
-//    x1[i] = (double)i;
-//  }
+  double time2 = clock() / (double)CLOCKS_PER_SEC;
+  double cpu_time = time2 - time1;
+
+  printf("CPU TIME: %.6f sec\n", cpu_time);
 }

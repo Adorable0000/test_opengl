@@ -22,7 +22,6 @@ protected:
   void paintGL() override;
 
 private:
-//  GLdouble LiveVertex[200000][2];
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   drawData paintData;
 //  std::vector<drawData> paintBuf;

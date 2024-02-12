@@ -17,7 +17,6 @@ class MainWindow : public QMainWindow
 public:
   MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
-//  QCustomPlot *graph1;
   OpenGLPlot *glplot0;
   OpenGLPlot *glplot1;
 

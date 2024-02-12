@@ -5,17 +5,15 @@
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   makeCurrent();
-  dataChanged = true;
+  dataChanged = false;
+  showGrid = false;
+  showAxis = false;
   sizeAxis.xRange.lower = 0;
   sizeAxis.xRange.upper = 5;
   sizeAxis.yRange.lower = 0;
   sizeAxis.yRange.upper = 5;
   paintData.xData.resize(5);
   paintData.yData.resize(5);
-  sizeAxis.xRange.lower = 0;
-  sizeAxis.xRange.upper = 5;
-  sizeAxis.yRange.lower = 0;
-  sizeAxis.yRange.upper = 5;
 }
 
 
@@ -43,7 +41,6 @@ void OpenGLPlot::resizeGL(int width, int height)
   glLoadIdentity();
   glViewport(0, 0, (GLint)width, (GLint)height);
   glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);
-//  glOrtho(0, 20000, -1, 4100, -1, 1);
 }
 
 
@@ -86,12 +83,48 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     {
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
-      sizeAxis.xRange.lower = keys[0];
-      sizeAxis.xRange.upper = keys.size();
-      sizeAxis.yRange.lower = std::floor(*std::min_element(values.begin(), values.end())) - 1;
-      sizeAxis.yRange.upper = std::ceil(*std::max_element(values.begin(), values.end())) + 1;
     }
   memmove(paintData.xData.data(), keys.data(), keys.size() * sizeof (double));
   memmove(paintData.yData.data(), values.data(), values.size() * sizeof (double));
   dataChanged = true;
 }
+
+
+void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
+{
+  sizeAxis.xRange.lower = xmin;
+  sizeAxis.xRange.upper = xmax;
+  sizeAxis.yRange.lower = ymin - 1;
+  sizeAxis.yRange.upper = ymax + 1;
+}
+
+void OpenGLPlot::gridVisible(bool state)
+{
+  showGrid = state;
+}
+
+void OpenGLPlot::axisVisible(bool state)
+{
+  showAxis = state;
+}
+
+
+void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
+{
+  printf("mouse moved\n");
+}
+
+
+void OpenGLPlot::wheelEvent(QWheelEvent *event)
+{
+  printf("wheel moved\n");
+}
+
+
+void OpenGLPlot::setColor()
+{
+
+}
+
+
+

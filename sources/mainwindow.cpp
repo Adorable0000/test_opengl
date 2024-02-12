@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
   QTimer *timer = new QTimer(this);
   timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
-  timer->start(10);
+  timer->start(100);
 }
 
 MainWindow::~MainWindow()
@@ -46,6 +46,7 @@ void MainWindow::replot()
   double time1 = clock() / (double)CLOCKS_PER_SEC;
 
   glplot0->addData(x1, y1);
+  glplot0->setRange(x1[0], x1.size(), std::floor(*std::min_element(y1.begin(), y1.end())), std::ceil(*std::max_element(y1.begin(), y1.end())));
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();
@@ -53,5 +54,5 @@ void MainWindow::replot()
   double time2 = clock() / (double)CLOCKS_PER_SEC;
   double cpu_time = time2 - time1;
 
-  printf("CPU TIME: %.6f sec\n", cpu_time);
+//  printf("CPU TIME: %.6f sec\n", cpu_time);
 }

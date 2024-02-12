@@ -4,6 +4,8 @@ This is just a plain plotter made for real-time plotting with Qt, using OpenGL
 
 <h3> Requirements </h3>
 
+C++11
+
 Qt, version higher than 4
 
 Hardware support for OpenGL version higher than 2.0
@@ -15,4 +17,4 @@ Hardware support for OpenGL version higher than 2.0
 	- Add grid
 - Add the ability to put two graphs in one plot
 - Add wheel and mouse press events
-- Add rescaling
+- Add graph color change 

@@ -1,5 +1,4 @@
 #include "openglplot.h"
-#include <math.h>
 
 
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
@@ -21,6 +20,7 @@ OpenGLPlot::~OpenGLPlot()
 {
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_BLEND);
+
   makeCurrent();
 }
 
@@ -46,13 +46,13 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 void OpenGLPlot::paintGL()
 {
-  GLdouble Vertex[paintData.xData.size()][2];
+  GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];
   if(dataChanged)
     {
-      for(int i = (int)sizeAxis.xRange.lower; i < (int)sizeAxis.xRange.upper; i++)
+      for(int i = 0; i < (int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower); i++)
         {
-          Vertex[i][0] = paintData.xData[i];
-          Vertex[i][1] = paintData.yData[i];
+          Vertex[i][0] = paintData.xData[i + (int)sizeAxis.xRange.lower];
+          Vertex[i][1] = paintData.yData[i + (int)sizeAxis.xRange.lower];
         }
       dataChanged = false;
     }
@@ -66,7 +66,7 @@ void OpenGLPlot::paintGL()
   glEnableClientState(GL_VERTEX_ARRAY);
   glColor3f(0, 0, 255);
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, sizeAxis.xRange.lower, sizeAxis.xRange.upper);
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (sizeAxis.xRange.upper - sizeAxis.xRange.lower));
   glDisableClientState(GL_VERTEX_ARRAY);
 }
 
@@ -111,9 +111,53 @@ void OpenGLPlot::axisVisible(bool state)
 }
 
 
-bool OpenGLPlot::eventFilter(QObject *obj, QEvent *event)
+void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
+{
+  if (event->buttons() & Qt::LeftButton)
+    {
+//      printf("X move: %d\n", event->pos().x());
+//      printf("mouseMove %d\n", mouseMove);
+      if(mousePressPos == 0)
+        {
+          mousePressPos = event->pos().x();
+          return;
+        }
+      mouseMove = mousePressPos - event->pos().x();
+      mousePressPos = event->pos().x();
+      sizeAxis.xRange.lower += mouseMove;
+      sizeAxis.xRange.upper += mouseMove;
+      dataChanged = true;
+      this->update();
+    }
+  event->accept();
+}
+
+
+void OpenGLPlot::mousePressEvent(QMouseEvent *event)
 {
 
+}
+
+
+void OpenGLPlot::wheelEvent(QWheelEvent *event)
+{
+  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper)
+    {
+      return;
+    }
+  if(sizeAxis.xRange.upper - event->angleDelta().y() <= paintData.xData.size())
+    {
+      sizeAxis.xRange.upper -= event->angleDelta().y();
+      dataChanged = true;
+      this->update();
+    }
+  if(sizeAxis.xRange.lower + event->angleDelta().y() > 0)
+    {
+      sizeAxis.xRange.lower += event->angleDelta().y();
+      dataChanged = true;
+      this->update();
+    }
+  event->accept();
 }
 
 

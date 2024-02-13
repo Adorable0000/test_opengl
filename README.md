@@ -16,5 +16,9 @@ Hardware support for OpenGL version higher than 2.0
 	- Add axis
 	- Add grid
 - Add the ability to put two graphs in one plot
-- Add wheel and mouse press events
+- Add mouse press event
 - Add graph color change 
+
+<h3> FIX </h3>
+
+- Fix render artifacts after resizing

@@ -29,8 +29,9 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   }
 
   QTimer *timer = new QTimer(this);
-  timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
-  timer->start(100);
+//  timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
+//  timer->start(100);
+  timer->singleShot(100,this, &MainWindow::replot);
 }
 
 MainWindow::~MainWindow()

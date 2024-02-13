@@ -3,6 +3,9 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
+#include <QMouseEvent>
+#include <QWheelEvent>
+
 
 
 class OpenGLPlot : public QOpenGLWidget
@@ -24,18 +27,27 @@ protected:
   void resizeGL(int width, int height) override;
   void paintGL() override;
 
-  bool eventFilter(QObject *obj, QEvent *event) override;
+  void wheelEvent(QWheelEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  void mousePressEvent(QMouseEvent *event) override;
 
 private:
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   drawData paintData;
+
   struct Range{double lower; double upper;};
   struct Axis{Range xRange; Range yRange;};
   Axis sizeAxis;
+
   bool dataChanged;
+
   bool showGrid;
   bool showAxis;
 
+  int mouseMove;
+  int mousePressPos;
+
+  int wheelMove;
 };
 
 #endif // OPENGLPLOT

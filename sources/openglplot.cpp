@@ -22,7 +22,6 @@ OpenGLPlot::~OpenGLPlot()
 {
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_BLEND);
-
   makeCurrent();
 }
 
@@ -42,7 +41,8 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glViewport(0, 0, (GLint)width, (GLint)height);
-  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);
+  dataChanged = true;
+  this->update();
 }
 
 
@@ -52,6 +52,7 @@ void OpenGLPlot::paintGL()
     {
       return;
     }
+
   GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];
   if(dataChanged)
     {
@@ -79,6 +80,10 @@ void OpenGLPlot::paintGL()
 
 void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 {
+  if(values.size() > GL_MAX_TEXTURE_SIZE*GL_MAX_TEXTURE_SIZE/(8*3))
+    {
+      return;
+    }
   if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()))
     {
       return;
@@ -100,8 +105,13 @@ void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
 {
   sizeAxis.xRange.lower = xmin;
   sizeAxis.xRange.upper = xmax;
-  sizeAxis.yRange.lower = ymin - 1;
-  sizeAxis.yRange.upper = ymax + 1;
+  sizeAxis.yRange.lower = ymin;
+  sizeAxis.yRange.upper = ymax;
+  if(ymax > 1)
+    {
+      sizeAxis.yRange.lower--;
+      sizeAxis.yRange.upper++;
+    }
 }
 
 
@@ -122,13 +132,13 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
   if (event->buttons() & Qt::LeftButton)
     {
       mouseMove = (mousePressPos - event->pos().x()) * 4;
-      if(sizeAxis.xRange.lower - mouseMove > 0)
+      if(sizeAxis.xRange.lower + mouseMove > 0)
         {
-          sizeAxis.xRange.lower -= mouseMove;
+          sizeAxis.xRange.lower += mouseMove;
         }
-      if(sizeAxis.xRange.upper - mouseMove < paintData.xData.size())
+      if(sizeAxis.xRange.upper + mouseMove < paintData.xData.size())
         {
-          sizeAxis.xRange.upper -= mouseMove;
+          sizeAxis.xRange.upper += mouseMove;
         }
       dataChanged = true;
       this->update();

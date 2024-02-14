@@ -13,6 +13,8 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
   sizeAxis.yRange.upper = 5;
   paintData.xData.resize(5);
   paintData.yData.resize(5);
+  mouseMove = 0;
+  mousePressPos = 0;
 }
 
 
@@ -46,6 +48,10 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 void OpenGLPlot::paintGL()
 {
+  if(sizeAxis.xRange.upper - sizeAxis.xRange.lower <= 0)
+    {
+      return;
+    }
   GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];
   if(dataChanged)
     {
@@ -115,27 +121,29 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton)
     {
-//      printf("X move: %d\n", event->pos().x());
-//      printf("mouseMove %d\n", mouseMove);
-      if(mousePressPos == 0)
+      mouseMove = (mousePressPos - event->pos().x()) * 4;
+      if(sizeAxis.xRange.lower - mouseMove > 0)
         {
-          mousePressPos = event->pos().x();
-          return;
+          sizeAxis.xRange.lower -= mouseMove;
         }
-      mouseMove = mousePressPos - event->pos().x();
-      mousePressPos = event->pos().x();
-      sizeAxis.xRange.lower += mouseMove;
-      sizeAxis.xRange.upper += mouseMove;
+      if(sizeAxis.xRange.upper - mouseMove < paintData.xData.size())
+        {
+          sizeAxis.xRange.upper -= mouseMove;
+        }
       dataChanged = true;
       this->update();
     }
+  mousePressPos = event->pos().x();
   event->accept();
 }
 
 
 void OpenGLPlot::mousePressEvent(QMouseEvent *event)
 {
-
+  if(event->button() == Qt::LeftButton)
+    {
+      mousePressPos = event->pos().x();
+    }
 }
 
 
@@ -148,15 +156,13 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
   if(sizeAxis.xRange.upper - event->angleDelta().y() <= paintData.xData.size())
     {
       sizeAxis.xRange.upper -= event->angleDelta().y();
-      dataChanged = true;
-      this->update();
     }
   if(sizeAxis.xRange.lower + event->angleDelta().y() > 0)
     {
       sizeAxis.xRange.lower += event->angleDelta().y();
-      dataChanged = true;
-      this->update();
     }
+  dataChanged = true;
+  this->update();
   event->accept();
 }
 

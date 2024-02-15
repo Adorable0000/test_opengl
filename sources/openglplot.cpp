@@ -142,8 +142,8 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
         }
       dataChanged = true;
       this->update();
+      mousePressPos = event->pos().x();
     }
-  mousePressPos = event->pos().x();
   event->accept();
 }
 

@@ -5,7 +5,7 @@
 #include <QOpenGLFunctions>
 #include <QMouseEvent>
 #include <QWheelEvent>
-
+#include <QColor>
 
 
 class OpenGLPlot : public QOpenGLWidget
@@ -16,7 +16,7 @@ public:
   OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
   void addData(std::vector<double> &keys, std::vector<double> &values);
-  void setColor();
+  void setColor(QColor col);
   void setRange(double xmin, double xmax, double ymin, double ymax);
   void gridVisible(bool state);
   void axisVisible(bool state);
@@ -48,6 +48,8 @@ private:
   int mousePressPos;
 
   int wheelMove;
+
+  QColor penColor;
 };
 
 #endif // OPENGLPLOT

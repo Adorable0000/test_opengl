@@ -52,7 +52,6 @@ void OpenGLPlot::paintGL()
     {
       return;
     }
-
   GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];
   if(dataChanged)
     {
@@ -71,7 +70,7 @@ void OpenGLPlot::paintGL()
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glEnableClientState(GL_VERTEX_ARRAY);
-  glColor3f(0, 0, 255);
+  glColor3f(penColor.red(), penColor.green(), penColor.blue());
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);
   glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (sizeAxis.xRange.upper - sizeAxis.xRange.lower));
   glDisableClientState(GL_VERTEX_ARRAY);
@@ -80,7 +79,7 @@ void OpenGLPlot::paintGL()
 
 void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 {
-  if(values.size() > GL_MAX_TEXTURE_SIZE*GL_MAX_TEXTURE_SIZE/(8*3))
+  if(values.size() > GL_MAX_TEXTURE_SIZE*GL_MAX_TEXTURE_SIZE/(8*4))
     {
       return;
     }
@@ -177,9 +176,9 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 }
 
 
-void OpenGLPlot::setColor()
+void OpenGLPlot::setColor(QColor col)
 {
-
+  penColor = col;
 }
 
 

@@ -47,6 +47,7 @@ void MainWindow::replot()
   double time1 = clock() / (double)CLOCKS_PER_SEC;
 
   glplot0->addData(x1, y1);
+  glplot0->setColor(Qt::blue);
   glplot0->setRange(x1[0], x1.size(), std::floor(*std::min_element(y1.begin(), y1.end())), std::ceil(*std::max_element(y1.begin(), y1.end())));
 //  glplot1->addData(x2, y2);
   glplot0->update();

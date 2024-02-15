@@ -28,19 +28,19 @@ OpenGLPlot::~OpenGLPlot()
 
 void OpenGLPlot::initializeGL()
 {
-  glClearColor(255,255,255,255);
-  glEnable(GL_LINE_SMOOTH);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
+  glClearColor(255,255,255,255);                      // Set background color
+  glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
+  glEnable(GL_BLEND);                                 // Enable color mix
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
+  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);            // Set fastest line smoothing
 }
 
 
 void OpenGLPlot::resizeGL(int width, int height)
 {
   glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glViewport(0, 0, (GLint)width, (GLint)height);
+  glLoadIdentity();                                 // Clear render matrix
+  glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
   dataChanged = true;
   this->update();
 }
@@ -52,7 +52,7 @@ void OpenGLPlot::paintGL()
     {
       return;
     }
-  GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];
+  GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];   // Creating vertex matrix with pixel based coord.
   if(dataChanged)
     {
       for(int i = 0; i < (int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower); i++)
@@ -62,18 +62,18 @@ void OpenGLPlot::paintGL()
         }
       dataChanged = false;
     }
-  makeCurrent();
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glColor3f(penColor.red(), penColor.green(), penColor.blue());
-  glVertexPointer(2, GL_DOUBLE, 0, &Vertex);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (sizeAxis.xRange.upper - sizeAxis.xRange.lower));
-  glDisableClientState(GL_VERTEX_ARRAY);
+  makeCurrent();                                                  // Change render context
+  glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
+  glLoadIdentity();                                               // Clear current render matrix
+  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);   // Create perspective matrix with pixel based coord.
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
+  glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
+  glLoadIdentity();                                               // Clear current render matrix
+  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
+  glColor3f(penColor.red(), penColor.green(), penColor.blue());   // Set texture color
+  glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (sizeAxis.xRange.upper - sizeAxis.xRange.lower));    // Render vertex matrix
+  glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 }
 
 

@@ -183,7 +183,7 @@ void OpenGLPlot::gridVisible(bool state)
 {
   showGrid = state;
 }
-//
+// //
 
 
 // Unused for now //
@@ -191,4 +191,4 @@ void OpenGLPlot::axisVisible(bool state)
 {
   showAxis = state;
 }
-//
+// //

@@ -56,5 +56,5 @@ void MainWindow::replot()
   double time2 = clock() / (double)CLOCKS_PER_SEC;
   double cpu_time = time2 - time1;
 
-//  printf("CPU TIME: %.6f sec\n", cpu_time);
+  printf("CPU TIME: %.6f sec\n", cpu_time);
 }

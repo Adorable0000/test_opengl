@@ -7,6 +7,9 @@
 #include <QWheelEvent>
 #include <QColor>
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 
 class OpenGLPlot : public QOpenGLWidget
 {
@@ -38,11 +41,16 @@ private:
   struct Range{double lower; double upper;};
   struct Axis{Range xRange; Range yRange;};
   Axis sizeAxis;
+  // Unused for now //
+  Axis printAxisRange;
+  //
 
   bool dataChanged;
 
+  // Unused for now //
   bool showGrid;
   bool showAxis;
+  //
 
   int mouseMove;
   int mousePressPos;

@@ -20,8 +20,10 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 
 OpenGLPlot::~OpenGLPlot()
 {
-  glDisable(GL_LINE_SMOOTH);
+  glDisable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
+  glDisable(GL_LINE_SMOOTH);
+  glDisable(GL_ALPHA_TEST);
   makeCurrent();
 }
 
@@ -29,10 +31,13 @@ OpenGLPlot::~OpenGLPlot()
 void OpenGLPlot::initializeGL()
 {
   glClearColor(255,255,255,255);                      // Set background color
-  glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
+  glEnable(GL_DEPTH_TEST);                            // Enable depth test
+  glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
   glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);            // Set fastest line smoothing
+  glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
+  glEnable(GL_ALPHA_TEST);
 }
 
 
@@ -48,17 +53,19 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 void OpenGLPlot::paintGL()
 {
-  if(sizeAxis.xRange.upper - sizeAxis.xRange.lower <= 0)
+  int bounds = sizeAxis.xRange.upper - sizeAxis.xRange.lower;
+  int low = sizeAxis.xRange.lower;
+  if(bounds <= 0)
     {
       return;
     }
-  GLdouble Vertex[(int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower)][2];   // Creating vertex matrix with pixel based coord.
+  GLdouble Vertex[bounds][2];                                     // Creating vertex matrix with pixel based coord.
   if(dataChanged)
     {
-      for(int i = 0; i < (int)(sizeAxis.xRange.upper - sizeAxis.xRange.lower); i++)
+      for(int i = 0; i < bounds; i++)
         {
-          Vertex[i][0] = paintData.xData[i + (int)sizeAxis.xRange.lower];
-          Vertex[i][1] = paintData.yData[i + (int)sizeAxis.xRange.lower];
+          Vertex[i][0] = paintData.xData[i + low];
+          Vertex[i][1] = paintData.yData[i + low];
         }
       dataChanged = false;
     }
@@ -72,7 +79,7 @@ void OpenGLPlot::paintGL()
   glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
   glColor3f(penColor.red(), penColor.green(), penColor.blue());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (sizeAxis.xRange.upper - sizeAxis.xRange.lower));    // Render vertex matrix
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, bounds);           // Render vertex matrix
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 }
 
@@ -87,9 +94,11 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     {
       return;
     }
+  sizeAxis.xRange.lower = 0;
+  sizeAxis.xRange.upper = keys.size();
   paintData.xData.clear();
   paintData.yData.clear();
-  if(paintData.xData.size() != keys.size())
+  if((paintData.xData.size() != keys.size()) || (paintData.yData.size() != values.size()))
     {
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
@@ -102,27 +111,14 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 
 void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
 {
-  sizeAxis.xRange.lower = xmin;
-  sizeAxis.xRange.upper = xmax;
+  // Unused for now //
+  printAxisRange.xRange.lower = xmin;
+  printAxisRange.xRange.upper = xmax;
+  printAxisRange.yRange.lower = ymin;
+  printAxisRange.yRange.upper = ymax;
+  //
   sizeAxis.yRange.lower = ymin;
   sizeAxis.yRange.upper = ymax;
-  if(ymax > 1)
-    {
-      sizeAxis.yRange.lower--;
-      sizeAxis.yRange.upper++;
-    }
-}
-
-
-void OpenGLPlot::gridVisible(bool state)
-{
-  showGrid = state;
-}
-
-
-void OpenGLPlot::axisVisible(bool state)
-{
-  showAxis = state;
 }
 
 
@@ -182,4 +178,17 @@ void OpenGLPlot::setColor(QColor col)
 }
 
 
+// Unused for now //
+void OpenGLPlot::gridVisible(bool state)
+{
+  showGrid = state;
+}
+//
 
+
+// Unused for now //
+void OpenGLPlot::axisVisible(bool state)
+{
+  showAxis = state;
+}
+//

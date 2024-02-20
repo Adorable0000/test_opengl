@@ -2,7 +2,6 @@
 #define OPENGLPLOT
 
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QColor>
@@ -10,13 +9,23 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+//class paintBuf
+//{
+//public:
+//  explicit paintBuf(int size);
+//  ~paintBuf();
+
+//  GLdouble *buf_ptr[2];
+//private:
+//  int buf_size;
+//};
 
 class OpenGLPlot : public QOpenGLWidget
 {
   Q_OBJECT
 
 public:
-  OpenGLPlot(QWidget *parent = nullptr);
+  explicit OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
   void addData(std::vector<double> &keys, std::vector<double> &values);
   void setColor(QColor col);

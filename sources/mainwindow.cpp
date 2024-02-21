@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   for(int i = 0; i < 20000; i++)
   {
     x1[i] = i;
-    y1[i] = (sin(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
+    y1[i] = (sin(2 * 3.14 * i)) + 2/* * (1 << 11)) + (1 << 11)*/;
     x2[i] = i;
     y2[i] = (cos(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
   }
@@ -48,7 +48,7 @@ void MainWindow::replot()
 
   glplot0->addData(x1, y1);
   glplot0->setColor(Qt::blue);
-  glplot0->setRange(x1[0], x1.size(), std::floor(*std::min_element(y1.begin(), y1.end())), std::ceil(*std::max_element(y1.begin(), y1.end())));
+  glplot0->setRange(x1[0], x1.size(), *std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();

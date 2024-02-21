@@ -59,15 +59,26 @@ void OpenGLPlot::paintGL()
       return;
     }
   GLdouble Vertex[bounds][2];                                     // Creating vertex matrix
+  GLdouble hLine[bounds][2];
   if(dataChanged)
     {
       for(int i = 0; i < bounds; i++)
         {
           Vertex[i][0] = paintData.xData[i + low];
           Vertex[i][1] = paintData.yData[i + low];
+          hLine[i][0] = paintData.xData[i + low];
+          hLine[i][1] = 2000;
         }
       dataChanged = false;
     }
+
+  GLdouble vLine[(int)sizeAxis.yRange.upper][2];
+  for(int i = 0; i < (int)sizeAxis.yRange.upper; i++)
+    {
+      vLine[i][0] = 10000;
+      vLine[i][1] = i;
+    }
+
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -76,7 +87,18 @@ void OpenGLPlot::paintGL()
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
   glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
-  glColor3f(penColor.red(), penColor.green(), penColor.blue());   // Set texture color
+
+  glDisable(GL_LINE_SMOOTH);
+  glDisable(GL_ALPHA_TEST);
+  glColor4f(0,0,0,0.3);
+  glVertexPointer(2, GL_DOUBLE, 0, &vLine);
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (int)sizeAxis.yRange.upper);
+  glVertexPointer(2, GL_DOUBLE, 0, &hLine);
+  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, bounds);
+  glEnable(GL_LINE_SMOOTH);
+  glEnable(GL_ALPHA_TEST);
+
+  glColor4f(penColor.red(), penColor.green(), penColor.blue(),penColor.alpha());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
   glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, bounds);           // Render vertex matrix
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix

@@ -67,7 +67,7 @@ void OpenGLPlot::paintGL()
           Vertex[i][0] = paintData.xData[i + low];
           Vertex[i][1] = paintData.yData[i + low];
           hLine[i][0] = paintData.xData[i + low];
-          hLine[i][1] = 2000;
+          hLine[i][1] = (sizeAxis.yRange.upper + sizeAxis.yRange.lower)/2;
         }
       dataChanged = false;
     }
@@ -75,7 +75,7 @@ void OpenGLPlot::paintGL()
   GLdouble vLine[(int)sizeAxis.yRange.upper][2];
   for(int i = 0; i < (int)sizeAxis.yRange.upper; i++)
     {
-      vLine[i][0] = 10000;
+      vLine[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
       vLine[i][1] = i;
     }
 

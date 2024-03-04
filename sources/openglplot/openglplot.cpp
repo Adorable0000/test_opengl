@@ -35,7 +35,7 @@ void OpenGLPlot::initializeGL()
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
-  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);            // Set fastest line smoothing
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);            // Set fastest line smoothing
   glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
 }
@@ -59,30 +59,42 @@ void OpenGLPlot::paintGL()
       return;
     }
   GLdouble Vertex[bounds][2];                                     // Creating vertex matrix
-  GLdouble hLine[bounds][2];
+  GLdouble hLine1[bounds][2];
+  GLdouble hLine2[bounds][2];
+  GLdouble hLine3[bounds][2];
+  GLdouble hLine4[bounds][2];
+  GLdouble hLine5[bounds][2];
   if(dataChanged)
     {
       for(int i = 0; i < bounds; i++)
         {
           Vertex[i][0] = paintData.xData[i + low];
           Vertex[i][1] = paintData.yData[i + low];
-          hLine[i][0] = paintData.xData[i + low];
-          hLine[i][1] = (sizeAxis.yRange.upper + sizeAxis.yRange.lower)/2;
+          hLine1[i][0] = paintData.xData[i + low];
+          hLine1[i][1] = (sizeAxis.yRange.upper + sizeAxis.yRange.lower)/2;
+          hLine2[i][0] = paintData.xData[i + low];
+          hLine2[i][1] = (hLine1[i][1] + sizeAxis.yRange.upper)/2;
+          hLine3[i][0] = paintData.xData[i + low];
+          hLine3[i][1] = (hLine1[i][1] + sizeAxis.yRange.lower)/2;
+          hLine4[i][0] = paintData.xData[i + low];
+          hLine4[i][1] = sizeAxis.yRange.lower;
+          hLine5[i][0] = paintData.xData[i + low];
+          hLine5[i][1] = sizeAxis.yRange.upper;
         }
       dataChanged = false;
     }
 
-  GLdouble vLine[(int)sizeAxis.yRange.upper][2];
-  for(int i = 0; i < (int)sizeAxis.yRange.upper; i++)
-    {
-      vLine[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
-      vLine[i][1] = i;
-    }
+//  GLdouble vLine[(uint)std::abs(sizeAxis.yRange.upper)][2];
+//  for(uint i = 0; i < (uint)std::abs(sizeAxis.yRange.upper); i++)
+//    {
+//      vLine[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
+//      vLine[i][1] = i;
+//    }
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower, sizeAxis.yRange.upper, -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower-0.01, sizeAxis.yRange.upper+0.01, -1, 1);   // Create perspective matrix with pixel based coordinates
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -90,11 +102,20 @@ void OpenGLPlot::paintGL()
 
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
-  glColor4f(0,0,0,0.3);
-  glVertexPointer(2, GL_DOUBLE, 0, &vLine);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (int)sizeAxis.yRange.upper);
-  glVertexPointer(2, GL_DOUBLE, 0, &hLine);
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, bounds);
+  glColor4f(0,0,0,1);
+//  glVertexPointer(2, GL_DOUBLE, 0, &vLine);
+//  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (int)sizeAxis.yRange.upper);
+
+  glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
+  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glVertexPointer(2, GL_DOUBLE, 0, &hLine2);
+  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glVertexPointer(2, GL_DOUBLE, 0, &hLine3);
+  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glVertexPointer(2, GL_DOUBLE, 0, &hLine4);
+  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glVertexPointer(2, GL_DOUBLE, 0, &hLine5);
+  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 

@@ -28,6 +28,7 @@ HEADERS += $$files("../sources/*.h", true)
 SOURCES += $$files("../app/*.cpp", true)
 
 INCLUDEPATH += ../sources
+INCLUDEPATH += ../sources/openglplot
 INCLUDEPATH += ../app
 
 win32: LIBS += -lopengl32

@@ -8,7 +8,7 @@ C++11
 
 Qt, version higher than 4
 
-Hardware support for OpenGL version 2.0 or higher
+Hardware support for OpenGL version 3.0 or higher
 
 <h3> TODO </h3>
 

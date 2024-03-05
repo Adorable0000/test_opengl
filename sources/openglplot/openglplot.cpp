@@ -46,6 +46,8 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
+
+  wHeight = height;
   dataChanged = true;
 }
 
@@ -88,7 +90,7 @@ void OpenGLPlot::paintGL()
   for(int i = 0; i < 1000; i++)
     {
       vLine1[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
-      vLine1[i][1] = sizeAxis.yRange.lower + i*(1000*0.000005);
+      vLine1[i][1] = sizeAxis.yRange.lower + i * 0.005;
     }
 
   makeCurrent();                                                  // Change render context
@@ -199,7 +201,7 @@ void OpenGLPlot::mousePressEvent(QMouseEvent *event)
 
 void OpenGLPlot::wheelEvent(QWheelEvent *event)
 {
-  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper-10)
+  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper - 1 - event->angleDelta().y())
     {
       return;
     }

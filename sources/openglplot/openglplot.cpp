@@ -47,7 +47,6 @@ void OpenGLPlot::resizeGL(int width, int height)
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
 
-  wHeight = height;
   dataChanged = true;
 }
 

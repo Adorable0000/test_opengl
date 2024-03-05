@@ -89,7 +89,7 @@ void OpenGLPlot::paintGL()
   for(int i = 0; i < 1000; i++)
     {
       vLine1[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
-      vLine1[i][1] = sizeAxis.yRange.lower + i * 0.005;
+      vLine1[i][1] = sizeAxis.yRange.lower + i * ((sizeAxis.yRange.upper - sizeAxis.yRange.lower)/1000);
     }
 
   makeCurrent();                                                  // Change render context
@@ -126,7 +126,6 @@ void OpenGLPlot::paintGL()
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
   glDrawArrays(GL_LINE_STRIP, 0, bounds);           // Render vertex matrix
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
-
 }
 
 

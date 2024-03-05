@@ -54,7 +54,7 @@ void OpenGLPlot::paintGL()
 {
   int bounds = sizeAxis.xRange.upper - sizeAxis.xRange.lower;
   int low = sizeAxis.xRange.lower;
-  if(bounds <= 0)
+  if(bounds < 3)
     {
       return;
     }
@@ -84,12 +84,12 @@ void OpenGLPlot::paintGL()
       dataChanged = false;
     }
 
-//  GLdouble vLine[(uint)std::abs(sizeAxis.yRange.upper)][2];
-//  for(uint i = 0; i < (uint)std::abs(sizeAxis.yRange.upper); i++)
-//    {
-//      vLine[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
-//      vLine[i][1] = i;
-//    }
+  GLdouble vLine1[1000][2];
+  for(int i = 0; i < 1000; i++)
+    {
+      vLine1[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
+      vLine1[i][1] = sizeAxis.yRange.lower + i*(1000*0.000005);
+    }
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
@@ -102,27 +102,30 @@ void OpenGLPlot::paintGL()
 
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
-  glColor4f(0,0,0,1);
-//  glVertexPointer(2, GL_DOUBLE, 0, &vLine);
-//  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, (int)sizeAxis.yRange.upper);
 
+  glColor4f(0,0,0,1);
+
+  glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
+  glDrawArrays(GL_LINES, 0, 1000);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
-  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glDrawArrays(GL_LINES, 0, bounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine2);
-  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glDrawArrays(GL_LINES, 0, bounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine3);
-  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glDrawArrays(GL_LINES, 0, bounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine4);
-  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glDrawArrays(GL_LINE_STRIP, 0, bounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine5);
-  glDrawArrays(/*GL_LINE_STRIP_ADJACENCY_EXT*/GL_LINES_ADJACENCY_EXT, 0, bounds);
+  glDrawArrays(GL_LINES, 0, bounds);
+
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 
   glColor4f(penColor.red(), penColor.green(), penColor.blue(),penColor.alpha());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
-  glDrawArrays(GL_LINE_STRIP_ADJACENCY_EXT, 0, bounds);           // Render vertex matrix
+  glDrawArrays(GL_LINE_STRIP, 0, bounds);           // Render vertex matrix
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
+
 }
 
 
@@ -196,7 +199,7 @@ void OpenGLPlot::mousePressEvent(QMouseEvent *event)
 
 void OpenGLPlot::wheelEvent(QWheelEvent *event)
 {
-  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper)
+  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper-10)
     {
       return;
     }

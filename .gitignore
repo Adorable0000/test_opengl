@@ -1,7 +1,7 @@
-# Игнорируем файлы сборки
+# Ignore all build directories
 
 build*
 
-# Игнорируем user файлы
+# Ignore all user-specific files
 
 *.user

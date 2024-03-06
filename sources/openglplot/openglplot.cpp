@@ -1,6 +1,8 @@
 #include "openglplot.h"
 
 
+
+
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   makeCurrent();
@@ -141,6 +143,8 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     }
   sizeAxis.xRange.lower = 0;
   sizeAxis.xRange.upper = keys.size();
+  sizeAxis.yRange.lower = *std::min_element(values.begin(), values.end());
+  sizeAxis.yRange.upper = *std::max_element(values.begin(), values.end());
   paintData.xData.clear();
   paintData.yData.clear();
   if((paintData.xData.size() != keys.size()) || (paintData.yData.size() != values.size()))
@@ -154,17 +158,15 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 }
 
 
+// Unused for now //
 void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
 {
-  // Unused for now //
   printAxisRange.xRange.lower = xmin;
   printAxisRange.xRange.upper = xmax;
   printAxisRange.yRange.lower = ymin;
   printAxisRange.yRange.upper = ymax;
-  //
-  sizeAxis.yRange.lower = ymin;
-  sizeAxis.yRange.upper = ymax;
 }
+//
 
 
 void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)

@@ -86,12 +86,12 @@ void OpenGLPlot::paintGL()
         }
       dataChanged = false;
     }
-
-  GLdouble vLine1[1000][2];
-  for(int i = 0; i < 1000; i++)
+  int vsize = 1000;
+  GLdouble vLine1[vsize][2];
+  for(int i = 0; i < vsize; i++)
     {
       vLine1[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
-      vLine1[i][1] = sizeAxis.yRange.lower + i * ((sizeAxis.yRange.upper - sizeAxis.yRange.lower)/1000);
+      vLine1[i][1] = sizeAxis.yRange.lower + i * ((sizeAxis.yRange.upper - sizeAxis.yRange.lower)/vsize);
     }
 
   makeCurrent();                                                  // Change render context
@@ -109,7 +109,7 @@ void OpenGLPlot::paintGL()
   glColor4f(0,0,0,1);
 
   glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
-  glDrawArrays(GL_LINES, 0, 1000);
+  glDrawArrays(GL_LINES, 0, vsize);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
   glDrawArrays(GL_LINES, 0, bounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine2);
@@ -128,6 +128,7 @@ void OpenGLPlot::paintGL()
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
   glDrawArrays(GL_LINE_STRIP, 0, bounds);           // Render vertex matrix
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
+
 }
 
 
@@ -143,8 +144,7 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     }
   sizeAxis.xRange.lower = 0;
   sizeAxis.xRange.upper = keys.size();
-  sizeAxis.yRange.lower = *std::min_element(values.begin(), values.end());
-  sizeAxis.yRange.upper = *std::max_element(values.begin(), values.end());
+
   paintData.xData.clear();
   paintData.yData.clear();
   if((paintData.xData.size() != keys.size()) || (paintData.yData.size() != values.size()))
@@ -158,15 +158,17 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 }
 
 
-// Unused for now //
 void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
 {
+  // Unused for now //
   printAxisRange.xRange.lower = xmin;
   printAxisRange.xRange.upper = xmax;
   printAxisRange.yRange.lower = ymin;
   printAxisRange.yRange.upper = ymax;
+  //
+  sizeAxis.yRange.lower = ymin;
+  sizeAxis.yRange.upper = ymax;
 }
-//
 
 
 void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)

@@ -16,11 +16,12 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   grid->addWidget(glplot0,0,0,1,1);
 //  grid->addWidget(glplot1,1,0,1,1);
 
-  x1.resize(20000);
-  y1.resize(20000);
-  x2.resize(20000);
-  y2.resize(20000);
-  for(int i = 0; i < 20000; i++)
+  int size = 20000;
+  x1.resize(size);
+  y1.resize(size);
+  x2.resize(size);
+  y2.resize(size);
+  for(int i = 0; i < size; i++)
   {
     x1[i] = i;
     y1[i] = (sin(2 * 3.14 * i)/* * (1 << 11)) + (1 << 11*/)-10;
@@ -31,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   QTimer *timer = new QTimer(this);
 //  timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
 //  timer->start(100);
-  timer->singleShot(10,this, &MainWindow::replot);
+  timer->singleShot(15,this, &MainWindow::replot);
 }
 
 MainWindow::~MainWindow()

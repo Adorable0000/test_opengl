@@ -1,6 +1,7 @@
 #ifndef OPENGLPLOT
 #define OPENGLPLOT
 
+#include <QOpenGLFunctions_3_1>
 #include <QOpenGLWidget>
 #include <QMouseEvent>
 #include <QWheelEvent>

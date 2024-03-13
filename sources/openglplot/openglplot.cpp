@@ -1,11 +1,12 @@
 #include "openglplot.h"
-
+#include <iostream>
+#include <vector>
 
 
 
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
-  makeCurrent();
+//  makeCurrent();
   dataChanged = false;
   showGrid = false;
   showAxis = false;
@@ -22,11 +23,12 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 
 OpenGLPlot::~OpenGLPlot()
 {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ACCUM_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
-  makeCurrent();
+  glLoadIdentity();
 }
 
 
@@ -37,7 +39,7 @@ void OpenGLPlot::initializeGL()
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);            // Set fastest line smoothing
+  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);            // Set fastest line smoothing
   glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
 }
@@ -48,56 +50,71 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
-
   dataChanged = true;
 }
 
 
 void OpenGLPlot::paintGL()
 {
-  int bounds = sizeAxis.xRange.upper - sizeAxis.xRange.lower;
-  int low = sizeAxis.xRange.lower;
-  if(bounds < 3)
+  int xlow = sizeAxis.xRange.lower;
+  int xup = sizeAxis.xRange.upper;
+  int xbounds = xup - xlow;
+  double ylow = sizeAxis.yRange.lower;
+  double yup = sizeAxis.yRange.upper;
+
+  if(xbounds < 15)
     {
       return;
     }
-  GLdouble Vertex[bounds][2];                                     // Creating vertex matrix
-  GLdouble hLine1[bounds][2];
-  GLdouble hLine2[bounds][2];
-  GLdouble hLine3[bounds][2];
-  GLdouble hLine4[bounds][2];
-  GLdouble hLine5[bounds][2];
+
+  GLdouble Vertex[xbounds][2];                                     // Creating vertex matrix
+  GLdouble hLine1[xbounds][2];
+  GLdouble hLine2[xbounds][2];
+  GLdouble hLine3[xbounds][2];
+  GLdouble hLine4[xbounds][2];
+  GLdouble hLine5[xbounds][2];
+
   if(dataChanged)
     {
-      for(int i = 0; i < bounds; i++)
+      for(int i = 0; i < xbounds; i++)
         {
-          Vertex[i][0] = paintData.xData[i + low];
-          Vertex[i][1] = paintData.yData[i + low];
-          hLine1[i][0] = paintData.xData[i + low];
-          hLine1[i][1] = (sizeAxis.yRange.upper + sizeAxis.yRange.lower)/2;
-          hLine2[i][0] = paintData.xData[i + low];
-          hLine2[i][1] = (hLine1[i][1] + sizeAxis.yRange.upper)/2;
-          hLine3[i][0] = paintData.xData[i + low];
-          hLine3[i][1] = (hLine1[i][1] + sizeAxis.yRange.lower)/2;
-          hLine4[i][0] = paintData.xData[i + low];
-          hLine4[i][1] = sizeAxis.yRange.lower;
-          hLine5[i][0] = paintData.xData[i + low];
-          hLine5[i][1] = sizeAxis.yRange.upper;
+          Vertex[i][0] = paintData.xData[i + xlow];
+          Vertex[i][1] = paintData.yData[i + xlow];
+          hLine1[i][0] = paintData.xData[i + xlow];
+          hLine1[i][1] = (yup + ylow)/2;
+          hLine2[i][0] = paintData.xData[i + xlow];
+          hLine2[i][1] = (((yup + ylow)/2) + yup)/2;
+          hLine3[i][0] = paintData.xData[i + xlow];
+          hLine3[i][1] = (((yup + ylow)/2) + ylow)/2;
+          hLine4[i][0] = paintData.xData[i + xlow];
+          hLine4[i][1] = ylow;
+          hLine5[i][0] = paintData.xData[i + xlow];
+          hLine5[i][1] = yup;
         }
       dataChanged = false;
     }
+
+  //--------------------------------
+  //  Testing 2D vector
   int vsize = 1000;
-  GLdouble vLine1[vsize][2];
+//  GLdouble vLine1[vsize][2];
+  std::vector<std::vector<GLdouble>> vLine1;
+  vLine1.resize(vsize);
+//  vLine1.data()->resize(2);
+//  printf("%d\n", vLine1.size());
+//  printf("%d\n", vLine1[0].size());
   for(int i = 0; i < vsize; i++)
     {
-      vLine1[i][0] = (sizeAxis.xRange.upper + sizeAxis.xRange.lower)/2;
-      vLine1[i][1] = sizeAxis.yRange.lower + i * ((sizeAxis.yRange.upper - sizeAxis.yRange.lower)/vsize);
+      vLine1[i].resize(2);
+      vLine1[i][0] = (xup + xlow)/2;
+      vLine1[i][1] = ylow + i * ((yup - ylow)/vsize);
     }
+  //--------------------------------
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glOrtho(sizeAxis.xRange.lower, sizeAxis.xRange.upper, sizeAxis.yRange.lower-0.01, sizeAxis.yRange.upper+0.01, -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(xlow, xup, ylow-0.01, yup+0.01, -1, 1);   // Create perspective matrix with pixel based coordinates
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -108,36 +125,35 @@ void OpenGLPlot::paintGL()
 
   glColor4f(0,0,0,1);
 
-  glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
+  glVertexPointer(2, GL_DOUBLE, 0, vLine1.data()->data());
+ // glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
   glDrawArrays(GL_LINES, 0, vsize);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
-  glDrawArrays(GL_LINES, 0, bounds);
+  glDrawArrays(GL_LINES, 0, xbounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine2);
-  glDrawArrays(GL_LINES, 0, bounds);
+  glDrawArrays(GL_LINES, 0, xbounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine3);
-  glDrawArrays(GL_LINES, 0, bounds);
+  glDrawArrays(GL_LINES, 0, xbounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine4);
-  glDrawArrays(GL_LINE_STRIP, 0, bounds);
+  glDrawArrays(GL_LINE_STRIP, 0, xbounds);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine5);
-  glDrawArrays(GL_LINES, 0, bounds);
-
+  glDrawArrays(GL_LINES, 0, xbounds);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 
   glColor4f(penColor.red(), penColor.green(), penColor.blue(),penColor.alpha());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
-  glDrawArrays(GL_LINE_STRIP, 0, bounds);           // Render vertex matrix
+  glDrawArrays(GL_LINE_STRIP, 0, xbounds);           // Render vertex matrix
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 
+//  GLint a;
+//  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &a);
+//  printf("%d\n", a);
 }
 
 
 void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 {
-  if(values.size() > GL_MAX_TEXTURE_SIZE*GL_MAX_TEXTURE_SIZE/(8*4))
-    {
-      return;
-    }
   if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()))
     {
       return;
@@ -176,16 +192,20 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
   if (event->buttons() & Qt::LeftButton)
     {
       mouseMove = (mousePressPos - event->pos().x()) * 4;
-      if(sizeAxis.xRange.lower + mouseMove > 0)
+      if((sizeAxis.xRange.lower + mouseMove > 0) &&
+         (sizeAxis.xRange.lower + mouseMove < sizeAxis.xRange.upper - 15))
         {
           sizeAxis.xRange.lower += mouseMove;
+          dataChanged = true;
+          this->update();
         }
-      if(sizeAxis.xRange.upper + mouseMove < paintData.xData.size())
+      if((sizeAxis.xRange.upper + mouseMove < paintData.xData.size()) &&
+         (sizeAxis.xRange.upper + mouseMove > sizeAxis.xRange.lower + 15))
         {
           sizeAxis.xRange.upper += mouseMove;
+          dataChanged = true;
+          this->update();
         }
-      dataChanged = true;
-      this->update();
       mousePressPos = event->pos().x();
     }
   event->accept();
@@ -203,7 +223,7 @@ void OpenGLPlot::mousePressEvent(QMouseEvent *event)
 
 void OpenGLPlot::wheelEvent(QWheelEvent *event)
 {
-  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper - 1 - event->angleDelta().y())
+  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper - 15 - event->angleDelta().y())
     {
       return;
     }

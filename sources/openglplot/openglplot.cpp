@@ -6,7 +6,6 @@
 
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
-//  makeCurrent();
   dataChanged = false;
   showGrid = false;
   showAxis = false;
@@ -97,15 +96,12 @@ void OpenGLPlot::paintGL()
   //--------------------------------
   //  Testing 2D vector
   int vsize = 1000;
-//  GLdouble vLine1[vsize][2];
-  std::vector<std::vector<GLdouble>> vLine1;
-  vLine1.resize(vsize);
-//  vLine1.data()->resize(2);
-//  printf("%d\n", vLine1.size());
-//  printf("%d\n", vLine1[0].size());
+  GLdouble vLine1[vsize][2];
+//  std::vector<std::vector<GLdouble>> vLine1;
+//  vLine1.resize(vsize);
   for(int i = 0; i < vsize; i++)
     {
-      vLine1[i].resize(2);
+//      vLine1[i].resize(2);
       vLine1[i][0] = (xup + xlow)/2;
       vLine1[i][1] = ylow + i * ((yup - ylow)/vsize);
     }
@@ -125,8 +121,8 @@ void OpenGLPlot::paintGL()
 
   glColor4f(0,0,0,1);
 
-  glVertexPointer(2, GL_DOUBLE, 0, vLine1.data()->data());
- // glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
+ // glVertexPointer(2, GL_DOUBLE, 0, vLine1.data()->data());
+  glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
   glDrawArrays(GL_LINES, 0, vsize);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
   glDrawArrays(GL_LINES, 0, xbounds);

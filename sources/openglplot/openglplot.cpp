@@ -93,17 +93,16 @@ void OpenGLPlot::paintGL()
       dataChanged = false;
     }
 
+  int vsize = 1000;
+  //  GLdouble vLine1[vsize][2];
   //--------------------------------
   //  Testing 2D vector
-  int vsize = 1000;
-  GLdouble vLine1[vsize][2];
-//  std::vector<std::vector<GLdouble>> vLine1;
-//  vLine1.resize(vsize);
-  for(int i = 0; i < vsize; i++)
+  std::vector<GLdouble> vLine1;
+  vLine1.resize(vsize*2);
+  for(int i = 0; i < vsize; i+=2)
     {
-//      vLine1[i].resize(2);
-      vLine1[i][0] = (xup + xlow)/2;
-      vLine1[i][1] = ylow + i * ((yup - ylow)/vsize);
+      vLine1[i] = (xup + xlow)/2;
+      vLine1[i+1] = ylow + i * ((yup - ylow)/vsize);
     }
   //--------------------------------
 
@@ -121,8 +120,8 @@ void OpenGLPlot::paintGL()
 
   glColor4f(0,0,0,1);
 
- // glVertexPointer(2, GL_DOUBLE, 0, vLine1.data()->data());
-  glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
+  glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
+ // glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
   glDrawArrays(GL_LINES, 0, vsize);
   glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
   glDrawArrays(GL_LINES, 0, xbounds);
@@ -154,6 +153,7 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     {
       return;
     }
+
   sizeAxis.xRange.lower = 0;
   sizeAxis.xRange.upper = keys.size();
 
@@ -164,6 +164,7 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
     }
+
   memmove(paintData.xData.data(), keys.data(), keys.size() * sizeof (double));
   memmove(paintData.yData.data(), values.data(), values.size() * sizeof (double));
   dataChanged = true;

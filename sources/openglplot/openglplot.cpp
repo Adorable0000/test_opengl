@@ -66,39 +66,43 @@ void OpenGLPlot::paintGL()
       return;
     }
 
-  GLdouble Vertex[xbounds][2];                                     // Creating vertex matrix
-  GLdouble hLine1[xbounds][2];
-  GLdouble hLine2[xbounds][2];
-  GLdouble hLine3[xbounds][2];
-  GLdouble hLine4[xbounds][2];
-  GLdouble hLine5[xbounds][2];
-
+  std::vector<GLdouble> Vertex;
+  Vertex.resize(xbounds*2);
+  std::vector<GLdouble> hLine1;
+  hLine1.resize(xbounds*2);
+  std::vector<GLdouble> hLine2;
+  hLine2.resize(xbounds*2);
+  std::vector<GLdouble> hLine3;
+  hLine3.resize(xbounds*2);
+  std::vector<GLdouble> hLine4;
+  hLine4.resize(xbounds*2);
+  std::vector<GLdouble> hLine5;
+  hLine5.resize(xbounds*2);
   if(dataChanged)
     {
-      for(int i = 0; i < xbounds; i++)
+      for (int i = 0; i < xbounds*2; i+=2)
         {
-          Vertex[i][0] = paintData.xData[i + xlow];
-          Vertex[i][1] = paintData.yData[i + xlow];
-          hLine1[i][0] = paintData.xData[i + xlow];
-          hLine1[i][1] = (yup + ylow)/2;
-          hLine2[i][0] = paintData.xData[i + xlow];
-          hLine2[i][1] = (((yup + ylow)/2) + yup)/2;
-          hLine3[i][0] = paintData.xData[i + xlow];
-          hLine3[i][1] = (((yup + ylow)/2) + ylow)/2;
-          hLine4[i][0] = paintData.xData[i + xlow];
-          hLine4[i][1] = ylow;
-          hLine5[i][0] = paintData.xData[i + xlow];
-          hLine5[i][1] = yup;
+          Vertex[i] = paintData.xData[i/2 + xlow];
+          Vertex[i+1] = paintData.yData[i/2 + xlow];
+          hLine1[i] = paintData.xData[i/2 + xlow];
+          hLine1[i+1] = (yup + ylow)/2;
+          hLine2[i] = paintData.xData[i/2 + xlow];
+          hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
+          hLine3[i] = paintData.xData[i/2 + xlow];
+          hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
+          hLine4[i] = paintData.xData[i/2 + xlow];
+          hLine4[i+1] = ylow;
+          hLine5[i] = paintData.xData[i/2 + xlow];
+          hLine5[i+1] = yup;
         }
       dataChanged = false;
     }
 
   int vsize = 1000;
-  //  GLdouble vLine1[vsize][2];
   //--------------------------------
   //  Testing 2D vector
   std::vector<GLdouble> vLine1;
-  vLine1.resize(vsize*2);
+  vLine1.resize(vsize);
   for(int i = 0; i < vsize; i+=2)
     {
       vLine1[i] = (xup + xlow)/2;
@@ -121,24 +125,23 @@ void OpenGLPlot::paintGL()
   glColor4f(0,0,0,1);
 
   glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
- // glVertexPointer(2, GL_DOUBLE, 0, &vLine1);
-  glDrawArrays(GL_LINES, 0, vsize);
-  glVertexPointer(2, GL_DOUBLE, 0, &hLine1);
-  glDrawArrays(GL_LINES, 0, xbounds);
-  glVertexPointer(2, GL_DOUBLE, 0, &hLine2);
-  glDrawArrays(GL_LINES, 0, xbounds);
-  glVertexPointer(2, GL_DOUBLE, 0, &hLine3);
-  glDrawArrays(GL_LINES, 0, xbounds);
-  glVertexPointer(2, GL_DOUBLE, 0, &hLine4);
-  glDrawArrays(GL_LINE_STRIP, 0, xbounds);
-  glVertexPointer(2, GL_DOUBLE, 0, &hLine5);
-  glDrawArrays(GL_LINES, 0, xbounds);
+  glDrawArrays(GL_LINES, 0, vLine1.size()/2);
+  glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
+  glDrawArrays(GL_LINES, 0, hLine1.size()/2);
+  glVertexPointer(2, GL_DOUBLE, 0, hLine2.data());
+  glDrawArrays(GL_LINES, 0, hLine2.size()/2);
+  glVertexPointer(2, GL_DOUBLE, 0, hLine3.data());
+  glDrawArrays(GL_LINES, 0, hLine3.size()/2);
+  glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
+  glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
+  glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
+  glDrawArrays(GL_LINES, 0, hLine5.size()/2);
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 
   glColor4f(penColor.red(), penColor.green(), penColor.blue(),penColor.alpha());   // Set texture color
-  glVertexPointer(2, GL_DOUBLE, 0, &Vertex);                      // Set vertex matrix
-  glDrawArrays(GL_LINE_STRIP, 0, xbounds);           // Render vertex matrix
+  glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
+  glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 
 //  GLint a;

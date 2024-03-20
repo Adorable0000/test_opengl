@@ -45,6 +45,9 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
+  void insertColomn(int pos, double min, double max);
+  void insertRow();
+
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   drawData paintData;
 

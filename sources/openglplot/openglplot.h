@@ -71,6 +71,8 @@ private:
   int wheelMove;
 
   QColor penColor;
+  int win_width;
+  int win_height;
 };
 
 #endif // OPENGLPLOT

@@ -49,6 +49,12 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
+  win_width = width;
+  win_height = height;
+  if(win_height % 2 == 1)
+    {
+      win_height++;
+    }
   dataChanged = true;
 }
 
@@ -98,9 +104,7 @@ void OpenGLPlot::paintGL()
       dataChanged = false;
     }
 
-  int vsize = 1000;
-  //--------------------------------
-  //  Testing 2D vector
+  int vsize = win_height;
   std::vector<GLdouble> vLine1;
   vLine1.resize(vsize);
   for(int i = 0; i < vsize; i+=2)
@@ -108,7 +112,6 @@ void OpenGLPlot::paintGL()
       vLine1[i] = (xup + xlow)/2;
       vLine1[i+1] = ylow + i * ((yup - ylow)/vsize);
     }
-  //--------------------------------
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix

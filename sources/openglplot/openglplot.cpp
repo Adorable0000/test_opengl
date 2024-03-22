@@ -52,17 +52,19 @@ void OpenGLPlot::resizeGL(int width, int height)
   win_width = width;
   win_height = height;
 
+//  TESTING--------------------
   int mar_h = win_height % 4;
   if(mar_h > 0)
     {
       win_height -= mar_h;
     }
-//  TESTING--------------------
+
   int mar_w = win_width % 4;
   if(mar_w > 0)
     {
       win_width -= mar_w;
     }
+  printf("%d\n", win_width);
 //-----------------------------
   dataChanged = true;
 }
@@ -70,14 +72,14 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 void OpenGLPlot::paintGL()
 {
-  int xlow = sizeAxis.xRange.lower;
-  int xup = sizeAxis.xRange.upper;
-  int xbounds = xup - xlow;
+  double xlow = sizeAxis.xRange.lower;
+  double xup = sizeAxis.xRange.upper;
+  double xbounds = xup - xlow;
   double ylow = sizeAxis.yRange.lower;
   double yup = sizeAxis.yRange.upper;
   double ybounds = yup - ylow;
-  int vsize = win_height;
-  int hsize = win_width;
+  double vsize = win_height;
+  double hsize = win_width;
 
   if(xbounds < 15)
     {
@@ -95,16 +97,19 @@ void OpenGLPlot::paintGL()
 //------------------------
 
   std::vector<GLdouble> hLine2;
-  hLine2.resize(xbounds*2);
+//  hLine2.resize(xbounds*2);
+  hLine2.resize(hsize);
 
   std::vector<GLdouble> hLine3;
-  hLine3.resize(xbounds*2);
+//  hLine3.resize(xbounds*2);
+  hLine3.resize(hsize);
 
   std::vector<GLdouble> hLine4;
   hLine4.resize(2*2);
 
   std::vector<GLdouble> hLine5;
-  hLine5.resize(xbounds*2);
+//  hLine5.resize(xbounds*2);
+  hLine5.resize(hsize);
 
   if(dataChanged)
     {
@@ -116,8 +121,14 @@ void OpenGLPlot::paintGL()
 //  TESTING ------------------------------------------
       for(int i = 0; i < hsize; i+=2)
         {
-          hLine1[i] = xlow + i * ((xup - xlow)/hsize);
+          hLine1[i] = xlow + i * ((xbounds)/hsize);
           hLine1[i+1] = (yup + ylow)/2;
+          hLine2[i] = xlow + i * ((xbounds)/hsize);
+          hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
+          hLine3[i] = xlow + i * ((xbounds)/hsize);
+          hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
+          hLine5[i] = xlow + i * ((xbounds)/hsize);
+          hLine5[i+1] = yup;
         }
 //----------------------------------------------------
 
@@ -127,12 +138,12 @@ void OpenGLPlot::paintGL()
           Vertex[i+1] = paintData.yData[i/2 + xlow];
 //          hLine1[i] = paintData.xData[i/2 + xlow];
 //          hLine1[i+1] = (yup + ylow)/2;
-          hLine2[i] = paintData.xData[i/2 + xlow];
-          hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
-          hLine3[i] = paintData.xData[i/2 + xlow];
-          hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
-          hLine5[i] = paintData.xData[i/2 + xlow];
-          hLine5[i+1] = yup;
+//          hLine2[i] = paintData.xData[i/2 + xlow];
+//          hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
+//          hLine3[i] = paintData.xData[i/2 + xlow];
+//          hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
+//          hLine5[i] = paintData.xData[i/2 + xlow];
+//          hLine5[i+1] = yup;
         }
       dataChanged = false;
     }
@@ -143,7 +154,7 @@ void OpenGLPlot::paintGL()
   for(int i = 0; i < vsize; i+=2)
     {
       vLine1[i] = (xup + xlow)/2;
-      vLine1[i+1] = ylow + i * ((yup - ylow)/vsize);
+      vLine1[i+1] = ylow + i * ((ybounds)/vsize);
     }
 
   makeCurrent();                                                  // Change render context

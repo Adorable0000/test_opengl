@@ -51,10 +51,19 @@ void OpenGLPlot::resizeGL(int width, int height)
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
   win_width = width;
   win_height = height;
-  if(win_height % 2 == 1)
+
+  int mar_h = win_height % 4;
+  if(mar_h > 0)
     {
-      win_height++;
+      win_height -= mar_h;
     }
+//  TESTING--------------------
+  int mar_w = win_width % 4;
+  if(mar_w > 0)
+    {
+      win_width -= mar_w;
+    }
+//-----------------------------
   dataChanged = true;
 }
 
@@ -66,6 +75,9 @@ void OpenGLPlot::paintGL()
   int xbounds = xup - xlow;
   double ylow = sizeAxis.yRange.lower;
   double yup = sizeAxis.yRange.upper;
+  double ybounds = yup - ylow;
+  int vsize = win_height;
+  int hsize = win_width;
 
   if(xbounds < 15)
     {
@@ -74,39 +86,60 @@ void OpenGLPlot::paintGL()
 
   std::vector<GLdouble> Vertex;
   Vertex.resize(xbounds*2);
+
   std::vector<GLdouble> hLine1;
-  hLine1.resize(xbounds*2);
+//  hLine1.resize(xbounds*2);
+
+//  TESTING --------------
+  hLine1.resize(hsize);
+//------------------------
+
   std::vector<GLdouble> hLine2;
   hLine2.resize(xbounds*2);
+
   std::vector<GLdouble> hLine3;
   hLine3.resize(xbounds*2);
+
   std::vector<GLdouble> hLine4;
-  hLine4.resize(xbounds*2);
+  hLine4.resize(2*2);
+
   std::vector<GLdouble> hLine5;
   hLine5.resize(xbounds*2);
+
   if(dataChanged)
     {
+      hLine4[0] = xlow;
+      hLine4[1] = ylow;
+      hLine4[2] = xup;
+      hLine4[3] = ylow;
+
+//  TESTING ------------------------------------------
+      for(int i = 0; i < hsize; i+=2)
+        {
+          hLine1[i] = xlow + i * ((xup - xlow)/hsize);
+          hLine1[i+1] = (yup + ylow)/2;
+        }
+//----------------------------------------------------
+
       for (int i = 0; i < xbounds*2; i+=2)
         {
           Vertex[i] = paintData.xData[i/2 + xlow];
           Vertex[i+1] = paintData.yData[i/2 + xlow];
-          hLine1[i] = paintData.xData[i/2 + xlow];
-          hLine1[i+1] = (yup + ylow)/2;
+//          hLine1[i] = paintData.xData[i/2 + xlow];
+//          hLine1[i+1] = (yup + ylow)/2;
           hLine2[i] = paintData.xData[i/2 + xlow];
           hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
           hLine3[i] = paintData.xData[i/2 + xlow];
           hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
-          hLine4[i] = paintData.xData[i/2 + xlow];
-          hLine4[i+1] = ylow;
           hLine5[i] = paintData.xData[i/2 + xlow];
           hLine5[i+1] = yup;
         }
       dataChanged = false;
     }
 
-  int vsize = win_height;
   std::vector<GLdouble> vLine1;
   vLine1.resize(vsize);
+
   for(int i = 0; i < vsize; i+=2)
     {
       vLine1[i] = (xup + xlow)/2;
@@ -116,7 +149,7 @@ void OpenGLPlot::paintGL()
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glOrtho(xlow, xup, ylow-0.01, yup+0.01, -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(xlow, xup, ylow-(ybounds/100), yup+(ybounds/100), -1, 1);   // Create perspective matrix with pixel based coordinates
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -125,20 +158,27 @@ void OpenGLPlot::paintGL()
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
 
-  glColor4f(0,0,0,1);
+  glColor4f(0,0,0,0.5);
 
   glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
   glDrawArrays(GL_LINES, 0, vLine1.size()/2);
+
   glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
   glDrawArrays(GL_LINES, 0, hLine1.size()/2);
+
   glVertexPointer(2, GL_DOUBLE, 0, hLine2.data());
   glDrawArrays(GL_LINES, 0, hLine2.size()/2);
+
   glVertexPointer(2, GL_DOUBLE, 0, hLine3.data());
   glDrawArrays(GL_LINES, 0, hLine3.size()/2);
-  glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
-  glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
+
   glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
   glDrawArrays(GL_LINES, 0, hLine5.size()/2);
+
+  glColor4f(0,0,0,1);
+  glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
+  glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
+
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 

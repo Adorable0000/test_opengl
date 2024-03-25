@@ -10,11 +10,11 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
   showGrid = false;
   showAxis = false;
   sizeAxis.xRange.lower = 0;
-  sizeAxis.xRange.upper = 5;
+  sizeAxis.xRange.upper = 15;
   sizeAxis.yRange.lower = 0;
-  sizeAxis.yRange.upper = 5;
-  paintData.xData.resize(5);
-  paintData.yData.resize(5);
+  sizeAxis.yRange.upper = 15;
+  paintData.xData.resize(15);
+  paintData.yData.resize(15);
   mouseMove = 0;
   mousePressPos = 0;
 }
@@ -49,23 +49,24 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
-  win_width = width;
-  win_height = height;
+  lines_width = width;
+  lines_height = height;
 
-//  TESTING--------------------
-  int mar_h = win_height % 4;
+//  Keep grid lines sizes divisible by 4 so that
+//  last line will always touch the higher line
+//  because 1 line need 4 numbers
+  int mar_h = lines_height % 4;
   if(mar_h > 0)
     {
-      win_height -= mar_h;
+      lines_height -= mar_h;
     }
 
-  int mar_w = win_width % 4;
+  int mar_w = lines_width % 4;
   if(mar_w > 0)
     {
-      win_width -= mar_w;
+      lines_width -= mar_w;
     }
-  printf("%d\n", win_width);
-//-----------------------------
+
   dataChanged = true;
 }
 
@@ -78,78 +79,57 @@ void OpenGLPlot::paintGL()
   double ylow = sizeAxis.yRange.lower;
   double yup = sizeAxis.yRange.upper;
   double ybounds = yup - ylow;
-  double vsize = win_height;
-  double hsize = win_width;
+  double vsize = lines_height;
+  double hsize = lines_width;
 
-  if(xbounds < 15)
+  if(xbounds < 10)
     {
       return;
     }
 
-  std::vector<GLdouble> Vertex;
-  Vertex.resize(xbounds*2);
-
   std::vector<GLdouble> hLine1;
-//  hLine1.resize(xbounds*2);
-
-//  TESTING --------------
   hLine1.resize(hsize);
-//------------------------
 
   std::vector<GLdouble> hLine2;
-//  hLine2.resize(xbounds*2);
   hLine2.resize(hsize);
 
   std::vector<GLdouble> hLine3;
-//  hLine3.resize(xbounds*2);
   hLine3.resize(hsize);
 
   std::vector<GLdouble> hLine4;
   hLine4.resize(2*2);
 
   std::vector<GLdouble> hLine5;
-//  hLine5.resize(xbounds*2);
   hLine5.resize(hsize);
-
-  if(dataChanged)
-    {
-      hLine4[0] = xlow;
-      hLine4[1] = ylow;
-      hLine4[2] = xup;
-      hLine4[3] = ylow;
-
-//  TESTING ------------------------------------------
-      for(int i = 0; i < hsize; i+=2)
-        {
-          hLine1[i] = xlow + i * ((xbounds)/hsize);
-          hLine1[i+1] = (yup + ylow)/2;
-          hLine2[i] = xlow + i * ((xbounds)/hsize);
-          hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
-          hLine3[i] = xlow + i * ((xbounds)/hsize);
-          hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
-          hLine5[i] = xlow + i * ((xbounds)/hsize);
-          hLine5[i+1] = yup;
-        }
-//----------------------------------------------------
-
-      for (int i = 0; i < xbounds*2; i+=2)
-        {
-          Vertex[i] = paintData.xData[i/2 + xlow];
-          Vertex[i+1] = paintData.yData[i/2 + xlow];
-//          hLine1[i] = paintData.xData[i/2 + xlow];
-//          hLine1[i+1] = (yup + ylow)/2;
-//          hLine2[i] = paintData.xData[i/2 + xlow];
-//          hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
-//          hLine3[i] = paintData.xData[i/2 + xlow];
-//          hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
-//          hLine5[i] = paintData.xData[i/2 + xlow];
-//          hLine5[i+1] = yup;
-        }
-      dataChanged = false;
-    }
 
   std::vector<GLdouble> vLine1;
   vLine1.resize(vsize);
+
+  std::vector<GLdouble> vLine2;
+  vLine2.resize(2*2);
+
+//  std::vector<std::vector<GLdouble>> h1;
+//  h1.resize(2);
+//  h1.at(1).resize(2);
+//  h1.at(1).at(1) = 1;
+//  printf("%f\n", h1.at(1).at(1));
+
+  hLine4[0] = xlow;
+  hLine4[1] = ylow;
+  hLine4[2] = xup;
+  hLine4[3] = ylow;
+
+  for(int i = 0; i < hsize; i+=2)
+    {
+      hLine1[i] = xlow + i * ((xbounds)/hsize);
+      hLine1[i+1] = (yup + ylow)/2;
+      hLine2[i] = xlow + i * ((xbounds)/hsize);
+      hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
+      hLine3[i] = xlow + i * ((xbounds)/hsize);
+      hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
+      hLine5[i] = xlow + i * ((xbounds)/hsize);
+      hLine5[i+1] = yup;
+    }
 
   for(int i = 0; i < vsize; i+=2)
     {
@@ -157,10 +137,26 @@ void OpenGLPlot::paintGL()
       vLine1[i+1] = ylow + i * ((ybounds)/vsize);
     }
 
+  vLine2[0] = xlow;
+  vLine2[1] = ylow;
+  vLine2[2] = xlow;
+  vLine2[3] = yup;
+
+  if(dataChanged)
+    {
+      if(Vertex.size() != xbounds*2)  {Vertex.resize(xbounds*2);}
+      for (int i = 0; i < xbounds*2; i+=2)
+        {
+          Vertex[i] = paintData.xData[i/2 + xlow];
+          Vertex[i+1] = paintData.yData[i/2 + xlow];
+        }
+      dataChanged = false;
+    }
+
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glOrtho(xlow, xup, ylow-(ybounds/100), yup+(ybounds/100), -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(xlow-(xbounds/100), xup, ylow-(ybounds/100), yup, -1, 1);   // Create perspective matrix with pixel based coordinates
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -186,9 +182,12 @@ void OpenGLPlot::paintGL()
   glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
   glDrawArrays(GL_LINES, 0, hLine5.size()/2);
 
-  glColor4f(0,0,0,1);
+  glColor4f(0,0,0,0.6);
   glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
   glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
+
+  glVertexPointer(2, GL_DOUBLE, 0, vLine2.data());
+  glDrawArrays(GL_LINE_STRIP, 0, vLine2.size()/2);
 
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
@@ -211,9 +210,6 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
       return;
     }
 
-  sizeAxis.xRange.lower = 0;
-  sizeAxis.xRange.upper = keys.size();
-
   paintData.xData.clear();
   paintData.yData.clear();
   if((paintData.xData.size() != keys.size()) || (paintData.yData.size() != values.size()))
@@ -228,16 +224,17 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 }
 
 
-void OpenGLPlot::setRange(double xmin, double xmax, double ymin, double ymax)
+void OpenGLPlot::setYRange(double min, double max)
 {
-  // Unused for now //
-  printAxisRange.xRange.lower = xmin;
-  printAxisRange.xRange.upper = xmax;
-  printAxisRange.yRange.lower = ymin;
-  printAxisRange.yRange.upper = ymax;
-  //
-  sizeAxis.yRange.lower = ymin;
-  sizeAxis.yRange.upper = ymax;
+  sizeAxis.yRange.lower = min;
+  sizeAxis.yRange.upper = max;
+}
+
+
+void OpenGLPlot::setXRange(double min, double max)
+{
+  sizeAxis.xRange.lower = min;
+  sizeAxis.xRange.upper = max;
 }
 
 
@@ -297,21 +294,22 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 
 void OpenGLPlot::setColor(QColor col)
 {
-  penColor = col;
+  if(penColor != col)
+    {
+      penColor = col;
+    }
 }
 
 
-// Unused for now //
+//  Unused for now  --------------------
 void OpenGLPlot::gridVisible(bool state)
 {
   showGrid = state;
 }
-//
 
 
-// Unused for now //
 void OpenGLPlot::axisVisible(bool state)
 {
   showAxis = state;
 }
-//
+//  -----------------------------------

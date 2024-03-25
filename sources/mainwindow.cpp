@@ -17,7 +17,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 //  grid->addWidget(glplot1,1,0,1,1);
 
   int size = 20000;
-//  int size = 1000;
   x1.resize(size);
   y1.resize(size);
   x2.resize(size);
@@ -50,7 +49,8 @@ void MainWindow::replot()
 
   glplot0->addData(x1, y1);
   glplot0->setColor(Qt::blue);
-  glplot0->setRange(x1[0], x1.size(), *std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
+  glplot0->setYRange(*std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
+  glplot0->setXRange(0, y1.size());
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();

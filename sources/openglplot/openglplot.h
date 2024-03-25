@@ -30,7 +30,8 @@ public:
   ~OpenGLPlot();
   void addData(std::vector<double> &keys, std::vector<double> &values);
   void setColor(QColor col);
-  void setRange(double xmin, double xmax, double ymin, double ymax);
+  void setYRange(double min, double max);
+  void setXRange(double min, double max);
   void gridVisible(bool state);
   void axisVisible(bool state);
 //  void addGraph();
@@ -54,9 +55,6 @@ private:
   struct Range{double lower; double upper;};
   struct Axis{Range xRange; Range yRange;};
   Axis sizeAxis;
-  // Unused for now //
-  Axis printAxisRange;
-  //
 
   bool dataChanged;
 
@@ -71,8 +69,11 @@ private:
   int wheelMove;
 
   QColor penColor;
-  int win_width;
-  int win_height;
+
+  int lines_width;
+  int lines_height;
+
+  std::vector<GLdouble> Vertex;
 };
 
 #endif // OPENGLPLOT

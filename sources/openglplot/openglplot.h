@@ -1,8 +1,9 @@
 #ifndef OPENGLPLOT
 #define OPENGLPLOT
 
-#include <QOpenGLFunctions_3_1>
 #include <QOpenGLWidget>
+#include <QOpenGLExtraFunctions>
+
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QColor>
@@ -10,16 +11,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-//class paintBuf
-//{
-//public:
-//  explicit paintBuf(int size);
-//  ~paintBuf();
-
-//  GLdouble *buf_ptr[2];
-//private:
-//  int buf_size;
-//};
 
 class OpenGLPlot : public QOpenGLWidget
 {
@@ -75,5 +66,32 @@ private:
 
   std::vector<GLdouble> Vertex;
 };
+
+
+//----------------------------------------------
+//  TESTING TEXT RENDER USING BITMAP
+//
+class BitmapFont
+{
+public:
+  BitmapFont();
+ ~BitmapFont();
+  bool Load(char *fname);
+  void Print(char *Text, int x, int y);
+  void Select();
+  void Bind();
+  void SetBlend();
+  GLuint TexID;
+
+private:
+  int CellX,CellY,YOffset,RowPitch;
+  float RowFactor,ColFactor;
+  char Base;
+  char Width[256];
+  int RenderStyle;
+  int CurX,CurY;
+};
+//
+//----------------------------------------------
 
 #endif // OPENGLPLOT

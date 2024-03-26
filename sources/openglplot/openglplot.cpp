@@ -3,7 +3,6 @@
 #include <vector>
 
 
-
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   dataChanged = false;
@@ -81,8 +80,10 @@ void OpenGLPlot::paintGL()
   double ybounds = yup - ylow;
   double vsize = lines_height;
   double hsize = lines_width;
+  double hpixel = xbounds/hsize;
+  double vpixel = ybounds/vsize;
 
-  if(xbounds < 10)
+/*  if(xbounds < 10)
     {
       return;
     }
@@ -108,6 +109,9 @@ void OpenGLPlot::paintGL()
   std::vector<GLdouble> vLine2;
   vLine2.resize(2*2);
 
+  std::vector<GLdouble> vLine3;
+  vLine3.resize(vsize);
+
 //  std::vector<std::vector<GLdouble>> h1;
 //  h1.resize(2);
 //  h1.at(1).resize(2);
@@ -121,20 +125,26 @@ void OpenGLPlot::paintGL()
 
   for(int i = 0; i < hsize; i+=2)
     {
-      hLine1[i] = xlow + i * ((xbounds)/hsize);
+      hLine1[i] = xlow + i * hpixel;
       hLine1[i+1] = (yup + ylow)/2;
-      hLine2[i] = xlow + i * ((xbounds)/hsize);
+
+      hLine2[i] = xlow + i * hpixel;
       hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
-      hLine3[i] = xlow + i * ((xbounds)/hsize);
+
+      hLine3[i] = xlow + i * hpixel;
       hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
-      hLine5[i] = xlow + i * ((xbounds)/hsize);
+
+      hLine5[i] = xlow + i * hpixel;
       hLine5[i+1] = yup;
     }
 
   for(int i = 0; i < vsize; i+=2)
     {
       vLine1[i] = (xup + xlow)/2;
-      vLine1[i+1] = ylow + i * ((ybounds)/vsize);
+      vLine1[i+1] = ylow + i * vpixel;
+
+      vLine3[i] = xup;
+      vLine3[i+1] = ylow + i * vpixel;
     }
 
   vLine2[0] = xlow;
@@ -152,15 +162,18 @@ void OpenGLPlot::paintGL()
         }
       dataChanged = false;
     }
-
+*/
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glOrtho(xlow-(xbounds/100), xup, ylow-(ybounds/100), yup, -1, 1);   // Create perspective matrix with pixel based coordinates
+
+//  glOrtho(xlow-(hpixel*10), xup+(hpixel*10), ylow-(vpixel*10), yup+(vpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(0,800,0,600,-1,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
+
+/*  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
 
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
@@ -169,6 +182,9 @@ void OpenGLPlot::paintGL()
 
   glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
   glDrawArrays(GL_LINES, 0, vLine1.size()/2);
+
+  glVertexPointer(2, GL_DOUBLE, 0, vLine3.data());
+  glDrawArrays(GL_LINES, 0, vLine3.size()/2);
 
   glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
   glDrawArrays(GL_LINES, 0, hLine1.size()/2);
@@ -196,6 +212,18 @@ void OpenGLPlot::paintGL()
   glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
+*/
+  BitmapFont Font;
+  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_256_128.bff"))
+    {
+      printf("Can't load\n");
+      return;
+    }
+  glEnable(GL_MULTISAMPLE);
+  glColor4f(0,0,0,0);
+  Font.Select();
+  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0",100,100);
+
 
 //  GLint a;
 //  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &a);
@@ -238,6 +266,38 @@ void OpenGLPlot::setXRange(double min, double max)
 }
 
 
+void OpenGLPlot::setColor(QColor col)
+{
+  if(penColor != col)
+    {
+      penColor = col;
+    }
+}
+
+
+//  Unused for now  --------------------
+void OpenGLPlot::gridVisible(bool state)
+{
+  showGrid = state;
+}
+
+
+void OpenGLPlot::axisVisible(bool state)
+{
+  showAxis = state;
+}
+//  -----------------------------------
+
+
+void OpenGLPlot::mousePressEvent(QMouseEvent *event)
+{
+  if(event->button() == Qt::LeftButton)
+    {
+      mousePressPos = event->pos().x();
+    }
+}
+
+
 void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton)
@@ -263,15 +323,6 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 }
 
 
-void OpenGLPlot::mousePressEvent(QMouseEvent *event)
-{
-  if(event->button() == Qt::LeftButton)
-    {
-      mousePressPos = event->pos().x();
-    }
-}
-
-
 void OpenGLPlot::wheelEvent(QWheelEvent *event)
 {
   if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper - 15 - event->angleDelta().y())
@@ -292,24 +343,214 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 }
 
 
-void OpenGLPlot::setColor(QColor col)
+//----------------------------------------------
+//  TESTING TEXT RENDER USING BITMAP
+//
+BitmapFont::BitmapFont()
 {
-  if(penColor != col)
+  CurX=CurY=0;
+}
+
+BitmapFont::~BitmapFont()
+{
+
+}
+
+
+#include <fstream>
+#define WIDTH_DATA_OFFSET  20 // Offset to width data with BFF file
+#define MAP_DATA_OFFSET   276 // Offset to texture image data with BFF file
+#define BFG_MAXSTRING 255     // Maximum string length
+#define BFG_RS_NONE  0x0      // Blend flags
+#define BFG_RS_ALPHA 0x1
+#define BFG_RS_RGB   0x2
+#define BFG_RS_RGBA  0x4
+bool BitmapFont::Load(char *fname)
+{
+  char *dat, *img;
+  std::fstream in;
+  unsigned long fileSize;
+  char bpp;
+  int ImgX, ImgY;
+
+  in.open(fname, std::ios_base::binary | std::ios_base::in);
+
+  if(in.fail())
     {
-      penColor = col;
+      return false;
     }
+
+  in.seekg(0, std::ios_base::end);
+  fileSize = in.tellg();
+  in.seekg(0, std::ios_base::beg);
+
+  dat = new char[fileSize];
+  if(!dat)
+    {
+      return false;
+    }
+
+  in.read(dat,fileSize);
+  if(in.fail())
+    {
+      delete [] dat;
+      in.close();
+      return false;
+    }
+  in.close();
+
+  if((unsigned char)dat[0] != 0xBF || (unsigned char)dat[1] != 0xF2)
+    {
+      delete [] dat;
+      return false;
+    }
+  memcpy(&ImgX,&dat[2],sizeof(int));
+  memcpy(&ImgY,&dat[6],sizeof(int));
+  memcpy(&CellX,&dat[10],sizeof(int));
+  memcpy(&CellY,&dat[14],sizeof(int));
+  bpp=dat[18];
+  Base=dat[19];
+
+  if(fileSize != ((MAP_DATA_OFFSET)+((ImgX*ImgY)*(bpp/8))))
+          return false;
+
+  RowPitch=ImgX/CellX;
+  ColFactor=(float)CellX/(float)ImgX;
+  RowFactor=(float)CellY/(float)ImgY;
+  YOffset=CellY;
+
+  // Determine blending options based on BPP
+   switch(bpp)
+    {
+     case 8: // Greyscale
+      RenderStyle=BFG_RS_ALPHA;
+      break;
+
+     case 24: // RGB
+      RenderStyle=BFG_RS_RGB;
+      break;
+
+     case 32: // RGBA
+      RenderStyle=BFG_RS_RGBA;
+      break;
+
+     default: // Unsupported BPP
+      delete [] dat;
+      return false;
+      break;
+    }
+
+  img=new char[(ImgX*ImgY)*(bpp/8)];
+  if(!img)
+   {
+    delete [] dat;
+    return false;
+   }
+
+  // Grab char widths
+  memcpy(Width,&dat[WIDTH_DATA_OFFSET],256);
+  // Grab image data
+  memcpy(img,&dat[MAP_DATA_OFFSET],(ImgX*ImgY)*(bpp/8));
+  // Create Texture
+  glGenTextures(1,&TexID);
+  glBindTexture(GL_TEXTURE_2D,TexID);
+  // Fonts should be rendered at native resolution so no need for texture filtering
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+  // Stop chararcters from bleeding over edges
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+
+  switch(RenderStyle)
+   {
+    case BFG_RS_ALPHA:
+     glTexImage2D(GL_TEXTURE_2D,0,GL_LUMINANCE,ImgX,ImgY,0,GL_LUMINANCE,GL_UNSIGNED_BYTE,img);
+     break;
+
+    case BFG_RS_RGB:
+     glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,ImgX,ImgY,0,GL_RGB,GL_UNSIGNED_BYTE,img);
+     break;
+
+    case BFG_RS_RGBA:
+     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,ImgX,ImgY,0,GL_RGBA,GL_UNSIGNED_BYTE,img);
+     break;
+   }
+
+  // Clean up
+  delete [] img;
+  delete [] dat;
+
+  return true;
 }
 
 
-//  Unused for now  --------------------
-void OpenGLPlot::gridVisible(bool state)
-{
-  showGrid = state;
-}
+// Prints text at a specifed position, again cursor is updated
+void BitmapFont::Print(char* Text, int x, int y)
+ {
+  int sLen,Loop;
+  int Row,Col;
+  float U,V,U1,V1;
+
+  CurX=x;
+  CurY=y;
+
+  sLen=(int)strnlen(Text,BFG_MAXSTRING);
+
+  glBegin(GL_QUADS);
+
+   for(Loop=0;Loop!=sLen;++Loop)
+    {
+     Row=(Text[Loop]-Base)/RowPitch;
+     Col=(Text[Loop]-Base)-Row*RowPitch;
+
+     U=Col*ColFactor;
+     V=Row*RowFactor;
+     U1=U+ColFactor;
+     V1=V+RowFactor;
+
+     glTexCoord2f(U, V1);  glVertex2i(CurX,      CurY);
+     glTexCoord2f(U1,V1);  glVertex2i(CurX+CellX,CurY);
+     glTexCoord2f(U1,V ); glVertex2i(CurX+CellX,CurY+CellY);
+     glTexCoord2f(U, V ); glVertex2i(CurX,      CurY+CellY);
+
+     CurX+=Width[Text[Loop]];
+    }
+   glEnd();
+ }
 
 
-void OpenGLPlot::axisVisible(bool state)
-{
-  showAxis = state;
-}
-//  -----------------------------------
+void BitmapFont::Select()
+ {
+  glEnable(GL_TEXTURE_2D);
+  Bind();
+  SetBlend();
+ }
+
+void BitmapFont::Bind()
+ {
+  glBindTexture(GL_TEXTURE_2D,TexID);
+ }
+
+void BitmapFont::SetBlend()
+ {
+  glColor3f(0,0,0);
+
+    switch(RenderStyle)
+     {
+      case BFG_RS_ALPHA: // 8Bit
+       glBlendFunc(GL_SRC_ALPHA,GL_SRC_ALPHA);
+       glEnable(GL_BLEND);
+       break;
+
+      case BFG_RS_RGB:   // 24Bit
+       glDisable(GL_BLEND);
+       break;
+
+      case BFG_RS_RGBA:  // 32Bit
+       glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+       glEnable(GL_BLEND);
+       break;
+     }
+ }
+//
+//----------------------------------------------

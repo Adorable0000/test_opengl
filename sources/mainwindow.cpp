@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <QSurfaceFormat>
+
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {

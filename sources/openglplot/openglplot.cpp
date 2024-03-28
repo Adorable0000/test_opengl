@@ -32,7 +32,7 @@ OpenGLPlot::~OpenGLPlot()
 
 void OpenGLPlot::initializeGL()
 {
-  glClearColor(255,255,255,255);                      // Set white background color
+  glClearColor(1,1,1,1);                      // Set white background color
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
@@ -42,12 +42,13 @@ void OpenGLPlot::initializeGL()
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
 }
 
-
+int w, h;
 void OpenGLPlot::resizeGL(int width, int height)
 {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
+  w = width; h = height;
   lines_width = width;
   lines_height = height;
 
@@ -78,10 +79,10 @@ void OpenGLPlot::paintGL()
   double ylow = sizeAxis.yRange.lower;
   double yup = sizeAxis.yRange.upper;
   double ybounds = yup - ylow;
-  double vsize = lines_height;
-  double hsize = lines_width;
-  double hpixel = xbounds/hsize;
-  double vpixel = ybounds/vsize;
+  double hsize = lines_height;
+  double wsize = lines_width;
+  double wpixel = xbounds/wsize;
+  double hpixel = ybounds/hsize;
 
 /*  if(xbounds < 10)
     {
@@ -89,28 +90,28 @@ void OpenGLPlot::paintGL()
     }
 
   std::vector<GLdouble> hLine1;
-  hLine1.resize(hsize);
+  hLine1.resize(wsize);
 
   std::vector<GLdouble> hLine2;
-  hLine2.resize(hsize);
+  hLine2.resize(wsize);
 
   std::vector<GLdouble> hLine3;
-  hLine3.resize(hsize);
+  hLine3.resize(wsize);
 
   std::vector<GLdouble> hLine4;
   hLine4.resize(2*2);
 
   std::vector<GLdouble> hLine5;
-  hLine5.resize(hsize);
+  hLine5.resize(wsize);
 
   std::vector<GLdouble> vLine1;
-  vLine1.resize(vsize);
+  vLine1.resize(hsize);
 
   std::vector<GLdouble> vLine2;
   vLine2.resize(2*2);
 
   std::vector<GLdouble> vLine3;
-  vLine3.resize(vsize);
+  vLine3.resize(hsize);
 
 //  std::vector<std::vector<GLdouble>> h1;
 //  h1.resize(2);
@@ -123,28 +124,28 @@ void OpenGLPlot::paintGL()
   hLine4[2] = xup;
   hLine4[3] = ylow;
 
-  for(int i = 0; i < hsize; i+=2)
+  for(int i = 0; i < wsize; i+=2)
     {
-      hLine1[i] = xlow + i * hpixel;
+      hLine1[i] = xlow + i * wpixel;
       hLine1[i+1] = (yup + ylow)/2;
 
-      hLine2[i] = xlow + i * hpixel;
+      hLine2[i] = xlow + i * wpixel;
       hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
 
-      hLine3[i] = xlow + i * hpixel;
+      hLine3[i] = xlow + i * wpixel;
       hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
 
-      hLine5[i] = xlow + i * hpixel;
+      hLine5[i] = xlow + i * wpixel;
       hLine5[i+1] = yup;
     }
 
-  for(int i = 0; i < vsize; i+=2)
+  for(int i = 0; i < hsize; i+=2)
     {
       vLine1[i] = (xup + xlow)/2;
-      vLine1[i+1] = ylow + i * vpixel;
+      vLine1[i+1] = ylow + i * hpixel;
 
       vLine3[i] = xup;
-      vLine3[i+1] = ylow + i * vpixel;
+      vLine3[i+1] = ylow + i * hpixel;
     }
 
   vLine2[0] = xlow;
@@ -167,8 +168,8 @@ void OpenGLPlot::paintGL()
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
 
-//  glOrtho(xlow-(hpixel*10), xup+(hpixel*10), ylow-(vpixel*10), yup+(vpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
-  glOrtho(0,800,0,600,-1,1);
+//  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*10), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(0,(w),0,(h),-1,1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -213,16 +214,21 @@ void OpenGLPlot::paintGL()
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 */
+
+  //--------------------------------------------------------------------------------------------
+  //  TESTING TEXT RENDER USING BITMAP
+  //
   BitmapFont Font;
   if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_256_128.bff"))
     {
       printf("Can't load\n");
       return;
     }
-  glEnable(GL_MULTISAMPLE);
   glColor4f(0,0,0,0);
   Font.Select();
-  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0",100,100);
+  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
+  //
+  //--------------------------------------------------------------------------------------------
 
 
 //  GLint a;
@@ -344,11 +350,54 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 
 
 //----------------------------------------------
+//  TESTING TEXT RENDER USING FREETYPE 2
+//
+FreeTypeFont::FreeTypeFont()
+{
+  if(FT_Init_FreeType(&ft))
+    {
+      printf("Error, can't load freetype\n");
+    }
+}
+
+
+FreeTypeFont::~FreeTypeFont()
+{
+  FT_Done_FreeType(ft);
+}
+
+void FreeTypeFont::ftInit()
+{
+  if(FT_New_Face(ft, "fonts/arial.ttf", 0, &face))
+    {
+      printf("Error, can't load font\n");
+    }
+  FT_Set_Pixel_Sizes(face, 0, 48);
+  if(FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+    {
+      printf("Error, can't load glyph\n");
+    }
+
+}
+
+
+
+
+//
+//----------------------------------------------
+
+
+//----------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
 BitmapFont::BitmapFont()
 {
+  CellX = 0; CellY = 0; YOffset = 0; RowPitch = 0;
+  RowFactor = 0; ColFactor = 0;
+  Base = 0;
+  RenderStyle = 0;
   CurX=CurY=0;
+  TexID = 0;
 }
 
 BitmapFont::~BitmapFont()
@@ -458,8 +507,8 @@ bool BitmapFont::Load(char *fname)
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
   // Stop chararcters from bleeding over edges
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_BORDER);
 
   switch(RenderStyle)
    {

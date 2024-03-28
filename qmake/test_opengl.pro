@@ -30,6 +30,9 @@ INCLUDEPATH += ../sources
 INCLUDEPATH += ../sources/openglplot
 INCLUDEPATH += ../app
 
+unix: INCLUDEPATH += /usr/include/freetype2
+LIBS += -lfreetype
+
 win32: LIBS += -lopengl32
 
 # Default rules for deployment.

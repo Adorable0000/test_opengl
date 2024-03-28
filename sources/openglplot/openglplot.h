@@ -69,6 +69,29 @@ private:
 
 
 //----------------------------------------------
+//  TESTING TEXT RENDER USING FREETYPE 2
+//
+#include "ft2build.h"
+#include FT_FREETYPE_H
+
+class FreeTypeFont
+{
+public:
+  FreeTypeFont();
+  ~FreeTypeFont();
+
+  void ftInit();
+
+  FT_Face face;
+private:
+  FT_Library ft;
+};
+
+//
+//----------------------------------------------
+
+
+//----------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
 class BitmapFont

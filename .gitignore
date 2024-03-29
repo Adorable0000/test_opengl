@@ -5,3 +5,4 @@ build*
 # Ignore all user-specific files
 
 *.user
+*.txt

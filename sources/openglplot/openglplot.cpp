@@ -33,6 +33,7 @@ OpenGLPlot::~OpenGLPlot()
 void OpenGLPlot::initializeGL()
 {
   glClearColor(1,1,1,1);                      // Set white background color
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
@@ -54,7 +55,7 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 //  Keep grid lines sizes divisible by 4 so that
 //  last line will always touch the higher line
-//  because 1 line need 4 numbers
+//  Remember that 1 line need 4 numbers
   int mar_h = lines_height % 4;
   if(mar_h > 0)
     {
@@ -219,18 +220,19 @@ void OpenGLPlot::paintGL()
   //  TESTING TEXT RENDER USING BITMAP
   //
   BitmapFont Font;
-  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_256_128.bff"))
+  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_high_res.bff"))
     {
       printf("Can't load\n");
       return;
     }
-  glColor4f(0,0,0,0);
+  glColor4f(0,0,0,1);
   Font.Select();
   Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
   //
   //--------------------------------------------------------------------------------------------
 
-
+  FreeTypeFont fr;
+  fr.ftInit();
 //  GLint a;
 //  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &a);
 //  printf("%d\n", a);
@@ -281,7 +283,8 @@ void OpenGLPlot::setColor(QColor col)
 }
 
 
-//  Unused for now  --------------------
+//---------------------------------------
+// unused for now
 void OpenGLPlot::gridVisible(bool state)
 {
   showGrid = state;
@@ -292,7 +295,8 @@ void OpenGLPlot::axisVisible(bool state)
 {
   showAxis = state;
 }
-//  -----------------------------------
+//
+//--------------------------------------
 
 
 void OpenGLPlot::mousePressEvent(QMouseEvent *event)
@@ -349,26 +353,80 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 }
 
 
+//---------------------------------------
+// unused for now
+Color::Color(OGL::Colors col)
+{
+  static const float colors[][4] = {
+    {0.0f, 0.0f, 0.0f, 0.0f},   // black
+    {1.0f, 1.0f, 1.0f, 0.0f},	// white
+    {0.1f, 0.1f, 0.1f, 0.0f},	// darkGray
+    {0.5f, 0.5f, 0.1f, 0.0f},	// gray
+    {0.7f, 0.7f, 0.7f, 0.0f},	// lightGray
+    {1.0f, 0.0f, 0.0f, 0.0f}, 	// red
+    {0.0f, 1.0f, 0.0f, 0.0f},	// green
+    {0.0f, 0.0f, 1.0f, 0.0f}, 	// blue
+    {0.5f, 1.0f, 1.0f, 0.0f},	// cyan
+    {1.0f, 0.0f, 1.0f, 0.0f},	// magenta
+    {1.0f, 1.0f, 0.0f, 0.0f},	// yellow
+    {0.5f, 0.0f, 0.0f, 0.0f},	// darkRed
+    {0.0f, 0.5f, 0.0f, 0.0f},	// darkGreen
+    {0.0f, 0.0f, 0.5f, 0.0f},	// darkBlue
+    {0.0f, 0.5f, 0.5f, 0.0f},	// darkCyan
+    {0.5f, 0.0f, 0.5f, 0.0f},	// darkMagenta
+    {0.5f, 0.5f, 0.0f, 0.0f},	// darkYellow
+    {1.0f, 0.0f, 1.0f, 0.0f},	// purple
+    {0.5f, 0.25f, 0.0f, 0.0f},	// brown
+  };
+
+  setRgbF(colors[col][0],
+      colors[col][1],
+      colors[col][2],
+      colors[col][3]);
+}
+
+
+void Color::setRgbF(float redF, float greenF, float blueF, float alphaF)
+{
+  if((redF > 1) || (greenF > 1)|| (blueF > 1) || (alphaF > 1))
+    {
+      return;
+    }
+  rgba.redF = redF;
+  rgba.greenF = greenF;
+  rgba.blueF = blueF;
+  rgba.alphaF = alphaF;
+}
+//
+//---------------------------------------
+
+
 //----------------------------------------------
 //  TESTING TEXT RENDER USING FREETYPE 2
 //
 FreeTypeFont::FreeTypeFont()
 {
-  if(FT_Init_FreeType(&ft))
-    {
-      printf("Error, can't load freetype\n");
-    }
+
 }
 
+
+FT_Face face;
+FT_Library ft;
 
 FreeTypeFont::~FreeTypeFont()
 {
   FT_Done_FreeType(ft);
 }
 
+
 void FreeTypeFont::ftInit()
 {
-  if(FT_New_Face(ft, "fonts/arial.ttf", 0, &face))
+  if(FT_Init_FreeType(&ft))
+    {
+      printf("Error, can't load freetype\n");
+    }
+
+  if(FT_New_Face(ft, "/usr/share/fonts/truetype/dejavu/DejaVuMathTeXGyre.ttf", 0, &face))
     {
       printf("Error, can't load font\n");
     }
@@ -377,11 +435,7 @@ void FreeTypeFont::ftInit()
     {
       printf("Error, can't load glyph\n");
     }
-
 }
-
-
-
 
 //
 //----------------------------------------------
@@ -557,10 +611,10 @@ void BitmapFont::Print(char* Text, int x, int y)
      U1=U+ColFactor;
      V1=V+RowFactor;
 
-     glTexCoord2f(U, V1);  glVertex2i(CurX,      CurY);
-     glTexCoord2f(U1,V1);  glVertex2i(CurX+CellX,CurY);
-     glTexCoord2f(U1,V ); glVertex2i(CurX+CellX,CurY+CellY);
-     glTexCoord2f(U, V ); glVertex2i(CurX,      CurY+CellY);
+     glTexCoord2f(U, V1);  glVertex2i(CurX/2,      CurY/2);
+     glTexCoord2f(U1,V1);  glVertex2i((CurX+CellX)/2,CurY/2);
+     glTexCoord2f(U1,V ); glVertex2i((CurX+CellX)/2,(CurY+CellY)/2);
+     glTexCoord2f(U, V ); glVertex2i(CurX/2,      (CurY+CellY)/2);
 
      CurX+=Width[Text[Loop]];
     }
@@ -603,3 +657,14 @@ void BitmapFont::SetBlend()
  }
 //
 //----------------------------------------------
+
+#if defined (__linux__)
+#include <unistd.h>
+#elif (WIN32)
+#include <direct.h>
+#endif
+std::string get_working_path()
+{
+  char dir[256];
+  return(getcwd(dir, 256) ? std::string(dir) : std::string(""));
+}

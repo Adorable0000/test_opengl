@@ -1,5 +1,5 @@
-#ifndef OPENGLPLOT
-#define OPENGLPLOT
+#ifndef OPENGLPLOT_H
+#define OPENGLPLOT_H
 
 #include <QOpenGLWidget>
 #include <QOpenGLExtraFunctions>
@@ -12,6 +12,54 @@
 #include <GL/glu.h>
 
 
+//---------------------------------------
+// unused for now
+namespace OGL {
+  enum Colors
+  {
+    black,
+    white,
+    darkGray,
+    gray,
+    lightGray,
+    red,
+    green,
+    blue,
+    cyan,
+    magenta,
+    yellow,
+    darkRed,
+    darkGreen,
+    darkBlue,
+    darkCyan,
+    darkMagenta,
+    darkYellow,
+    purple,
+    brown
+  };
+}
+
+
+class Color
+{
+public:
+  Color(OGL::Colors col);
+  Color &operator=(OGL::Colors col) noexcept;
+  int red();
+  int green();
+  int blue();
+  int alpha();
+  float redF();
+  float greenF();
+  float blueF();
+  float alphaF();
+  void setRgbF(float redF, float greenF, float blueF, float alphaF);
+private:
+  struct {float redF; float greenF; float blueF; float alphaF;}rgba;
+};
+//
+//---------------------------------------
+
 class OpenGLPlot : public QOpenGLWidget
 {
   Q_OBJECT
@@ -20,9 +68,15 @@ public:
   explicit OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
   void addData(std::vector<double> &keys, std::vector<double> &values);
+
   void setColor(QColor col);
+  void setColorf(float red, float green, float blue);
+  void setColor(int red, int green, int blue);
+  void setColor(Color &col);
+
   void setYRange(double min, double max);
   void setXRange(double min, double max);
+
   void gridVisible(bool state);
   void axisVisible(bool state);
 //  void addGraph();
@@ -52,7 +106,7 @@ private:
   // Unused for now //
   bool showGrid;
   bool showAxis;
-  //
+  //----------------//
 
   int mouseMove;
   int mousePressPos;
@@ -81,12 +135,7 @@ public:
   ~FreeTypeFont();
 
   void ftInit();
-
-  FT_Face face;
-private:
-  FT_Library ft;
 };
-
 //
 //----------------------------------------------
 
@@ -117,4 +166,6 @@ private:
 //
 //----------------------------------------------
 
-#endif // OPENGLPLOT
+
+std::string get_working_path();
+#endif // OPENGLPLOT_H

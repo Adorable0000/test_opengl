@@ -3,19 +3,27 @@
 #include <vector>
 
 
+BitmapFont Font;    // test
+FreeTypeFont fr;    // test
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   dataChanged = false;
   showGrid = false;
   showAxis = false;
-  sizeAxis.xRange.lower = 0;
-  sizeAxis.xRange.upper = 15;
-  sizeAxis.yRange.lower = 0;
-  sizeAxis.yRange.upper = 15;
+  sizeRange.xRange.lower = 0;
+  sizeRange.xRange.upper = 15;
+  sizeRange.yRange.lower = 0;
+  sizeRange.yRange.upper = 15;
   paintData.xData.resize(15);
   paintData.yData.resize(15);
   mouseMove = 0;
   mousePressPos = 0;
+
+//----------------------------------------------
+//  TESTING TEXT RENDER USING FREETYPE 2
+  fr.ftInit();
+//
+//----------------------------------------------
 }
 
 
@@ -32,8 +40,7 @@ OpenGLPlot::~OpenGLPlot()
 
 void OpenGLPlot::initializeGL()
 {
-  glClearColor(1,1,1,1);                      // Set white background color
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set white background color
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
@@ -41,49 +48,71 @@ void OpenGLPlot::initializeGL()
   glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);            // Set fastest line smoothing
   glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
+
+//----------------------------------------------
+//  TESTING TEXT RENDER USING BITMAP
+//
+  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_high_res_bold.bff"))
+    {
+      printf("Can't load\n");
+      return;
+    }
+//
+//----------------------------------------------
 }
 
-int w, h;
+int w, h;   // test values
 void OpenGLPlot::resizeGL(int width, int height)
 {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
-  w = width; h = height;
-  lines_width = width;
-  lines_height = height;
+  w = width; h = height;    // test values
+  plotWidth = width;
+  plotHeight = height;
+  gridLinesWidth = width;
+  gridLinesHeight = height;
 
 //  Keep grid lines sizes divisible by 4 so that
 //  last line will always touch the higher line
 //  Remember that 1 line need 4 numbers
-  int mar_h = lines_height % 4;
+  int mar_h = gridLinesHeight % 4;
   if(mar_h > 0)
     {
-      lines_height -= mar_h;
+      gridLinesHeight -= mar_h;
     }
 
-  int mar_w = lines_width % 4;
+  int mar_w = gridLinesWidth % 4;
   if(mar_w > 0)
     {
-      lines_width -= mar_w;
+      gridLinesWidth -= mar_w;
     }
 
   dataChanged = true;
 }
 
-
+double wpix;        // test value
+double hpix;        // test value
 void OpenGLPlot::paintGL()
 {
-  double xlow = sizeAxis.xRange.lower;
-  double xup = sizeAxis.xRange.upper;
+  double xlow = sizeRange.xRange.lower;
+  double xup = sizeRange.xRange.upper;
   double xbounds = xup - xlow;
-  double ylow = sizeAxis.yRange.lower;
-  double yup = sizeAxis.yRange.upper;
+  double ylow = sizeRange.yRange.lower;
+  double yup = sizeRange.yRange.upper;
   double ybounds = yup - ylow;
-  double hsize = lines_height;
-  double wsize = lines_width;
-  double wpixel = xbounds/wsize;
-  double hpixel = ybounds/hsize;
+  double hsize = gridLinesHeight;
+  double wsize = gridLinesWidth;
+  double wpixel = xbounds/wsize;    // width of pixel relative to graph
+  double hpixel = ybounds/hsize;    // height of pixel relative to graph
+  wpix = xbounds/w;  // test value
+  hpix = ybounds/h;  // test value
+
+//  std::vector<std::vector<GLdouble>> h1;
+//  h1.resize(2);
+//  h1.at(1).resize(2);
+//  h1.at(1).at(1) = 1;
+//  printf("%f\n", h1.at(1).at(1));
 
 /*  if(xbounds < 10)
     {
@@ -113,12 +142,6 @@ void OpenGLPlot::paintGL()
 
   std::vector<GLdouble> vLine3;
   vLine3.resize(hsize);
-
-//  std::vector<std::vector<GLdouble>> h1;
-//  h1.resize(2);
-//  h1.at(1).resize(2);
-//  h1.at(1).at(1) = 1;
-//  printf("%f\n", h1.at(1).at(1));
 
   hLine4[0] = xlow;
   hLine4[1] = ylow;
@@ -153,8 +176,9 @@ void OpenGLPlot::paintGL()
   vLine2[1] = ylow;
   vLine2[2] = xlow;
   vLine2[3] = yup;
-
-  if(dataChanged)
+*/
+/*
+    if(dataChanged)
     {
       if(Vertex.size() != xbounds*2)  {Vertex.resize(xbounds*2);}
       for (int i = 0; i < xbounds*2; i+=2)
@@ -169,14 +193,16 @@ void OpenGLPlot::paintGL()
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
 
-//  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*10), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
-  glOrtho(0,(w),0,(h),-1,1);
+  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*10), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
+//  glOrtho(0,(w),0,(h),-1,1);
+  printf("Width %d\n", w);
+  printf("Height %d\n", h);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
 
-/*  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
-
+  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
+/*
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
 
@@ -209,30 +235,23 @@ void OpenGLPlot::paintGL()
 
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
-
+*/
+/*
   glColor4f(penColor.red(), penColor.green(), penColor.blue(),penColor.alpha());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 */
 
-  //--------------------------------------------------------------------------------------------
-  //  TESTING TEXT RENDER USING BITMAP
-  //
-  BitmapFont Font;
-  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_high_res.bff"))
-    {
-      printf("Can't load\n");
-      return;
-    }
-  glColor4f(0,0,0,1);
+//--------------------------------------------------------------------------------------------
+//  TESTING TEXT RENDER USING BITMAP
+//
   Font.Select();
-  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
-  //
-  //--------------------------------------------------------------------------------------------
+//  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
+  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*10));
+//
+//--------------------------------------------------------------------------------------------
 
-  FreeTypeFont fr;
-  fr.ftInit();
 //  GLint a;
 //  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &a);
 //  printf("%d\n", a);
@@ -262,15 +281,15 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 
 void OpenGLPlot::setYRange(double min, double max)
 {
-  sizeAxis.yRange.lower = min;
-  sizeAxis.yRange.upper = max;
+  sizeRange.yRange.lower = min;
+  sizeRange.yRange.upper = max;
 }
 
 
 void OpenGLPlot::setXRange(double min, double max)
 {
-  sizeAxis.xRange.lower = min;
-  sizeAxis.xRange.upper = max;
+  sizeRange.xRange.lower = min;
+  sizeRange.xRange.upper = max;
 }
 
 
@@ -313,17 +332,17 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
   if (event->buttons() & Qt::LeftButton)
     {
       mouseMove = (mousePressPos - event->pos().x()) * 4;
-      if((sizeAxis.xRange.lower + mouseMove > 0) &&
-         (sizeAxis.xRange.lower + mouseMove < sizeAxis.xRange.upper - 15))
+      if((sizeRange.xRange.lower + mouseMove > 0) &&
+         (sizeRange.xRange.lower + mouseMove < sizeRange.xRange.upper - 15))
         {
-          sizeAxis.xRange.lower += mouseMove;
+          sizeRange.xRange.lower += mouseMove;
           dataChanged = true;
           this->update();
         }
-      if((sizeAxis.xRange.upper + mouseMove < paintData.xData.size()) &&
-         (sizeAxis.xRange.upper + mouseMove > sizeAxis.xRange.lower + 15))
+      if((sizeRange.xRange.upper + mouseMove < paintData.xData.size()) &&
+         (sizeRange.xRange.upper + mouseMove > sizeRange.xRange.lower + 15))
         {
-          sizeAxis.xRange.upper += mouseMove;
+          sizeRange.xRange.upper += mouseMove;
           dataChanged = true;
           this->update();
         }
@@ -335,17 +354,17 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 
 void OpenGLPlot::wheelEvent(QWheelEvent *event)
 {
-  if(sizeAxis.xRange.lower + event->angleDelta().y() >= sizeAxis.xRange.upper - 15 - event->angleDelta().y())
+  if(sizeRange.xRange.lower + event->angleDelta().y() >= sizeRange.xRange.upper - 15 - event->angleDelta().y())
     {
       return;
     }
-  if(sizeAxis.xRange.upper - event->angleDelta().y() <= paintData.xData.size())
+  if(sizeRange.xRange.upper - event->angleDelta().y() <= paintData.xData.size())
     {
-      sizeAxis.xRange.upper -= event->angleDelta().y();
+      sizeRange.xRange.upper -= event->angleDelta().y();
     }
-  if(sizeAxis.xRange.lower + event->angleDelta().y() > 0)
+  if(sizeRange.xRange.lower + event->angleDelta().y() > 0)
     {
-      sizeAxis.xRange.lower += event->angleDelta().y();
+      sizeRange.xRange.lower += event->angleDelta().y();
     }
   dataChanged = true;
   this->update();
@@ -354,35 +373,42 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 
 
 //---------------------------------------
-// unused for now
+// OpenGL colors
 Color::Color(OGL::Colors col)
 {
   static const float colors[][4] = {
-    {0.0f, 0.0f, 0.0f, 0.0f},   // black
-    {1.0f, 1.0f, 1.0f, 0.0f},	// white
-    {0.1f, 0.1f, 0.1f, 0.0f},	// darkGray
-    {0.5f, 0.5f, 0.1f, 0.0f},	// gray
-    {0.7f, 0.7f, 0.7f, 0.0f},	// lightGray
-    {1.0f, 0.0f, 0.0f, 0.0f}, 	// red
-    {0.0f, 1.0f, 0.0f, 0.0f},	// green
-    {0.0f, 0.0f, 1.0f, 0.0f}, 	// blue
-    {0.5f, 1.0f, 1.0f, 0.0f},	// cyan
-    {1.0f, 0.0f, 1.0f, 0.0f},	// magenta
-    {1.0f, 1.0f, 0.0f, 0.0f},	// yellow
-    {0.5f, 0.0f, 0.0f, 0.0f},	// darkRed
-    {0.0f, 0.5f, 0.0f, 0.0f},	// darkGreen
-    {0.0f, 0.0f, 0.5f, 0.0f},	// darkBlue
-    {0.0f, 0.5f, 0.5f, 0.0f},	// darkCyan
-    {0.5f, 0.0f, 0.5f, 0.0f},	// darkMagenta
-    {0.5f, 0.5f, 0.0f, 0.0f},	// darkYellow
-    {1.0f, 0.0f, 1.0f, 0.0f},	// purple
-    {0.5f, 0.25f, 0.0f, 0.0f},	// brown
+    {0.0f, 0.0f, 0.0f, 0.0f},     // black
+    {1.0f, 1.0f, 1.0f, 0.0f},     // white
+    {0.1f, 0.1f, 0.1f, 0.0f},     // darkGray
+    {0.5f, 0.5f, 0.1f, 0.0f},     // gray
+    {0.7f, 0.7f, 0.7f, 0.0f},     // lightGray
+    {1.0f, 0.0f, 0.0f, 0.0f},     // red
+    {0.0f, 1.0f, 0.0f, 0.0f},     // green
+    {0.0f, 0.0f, 1.0f, 0.0f},     // blue
+    {0.5f, 1.0f, 1.0f, 0.0f},     // cyan
+    {1.0f, 0.0f, 1.0f, 0.0f},     // magenta
+    {1.0f, 1.0f, 0.0f, 0.0f},     // yellow
+    {0.5f, 0.0f, 0.0f, 0.0f},     // darkRed
+    {0.0f, 0.5f, 0.0f, 0.0f},     // darkGreen
+    {0.0f, 0.0f, 0.5f, 0.0f},     // darkBlue
+    {0.0f, 0.5f, 0.5f, 0.0f},     // darkCyan
+    {0.5f, 0.0f, 0.5f, 0.0f},     // darkMagenta
+    {0.5f, 0.5f, 0.0f, 0.0f},     // darkYellow
+    {1.0f, 0.0f, 1.0f, 0.0f},     // purple
+    {0.5f, 0.25f, 0.0f, 0.0f},    // brown
   };
 
-  setRgbF(colors[col][0],
+  setRgbF(
+      colors[col][0],
       colors[col][1],
       colors[col][2],
       colors[col][3]);
+}
+
+
+Color::~Color()
+{
+
 }
 
 
@@ -396,6 +422,19 @@ void Color::setRgbF(float redF, float greenF, float blueF, float alphaF)
   rgba.greenF = greenF;
   rgba.blueF = blueF;
   rgba.alphaF = alphaF;
+}
+
+
+void Color::setRgb(int red, int green, int blue, float alpha)
+{
+  if((red > 255) || (green > 255)|| (blue > 255) || (alpha > 255))
+    {
+      return;
+    }
+  rgba.redF = red / 255;
+  rgba.greenF = green / 255;
+  rgba.blueF = blue / 255;
+  rgba.alphaF = alpha / 255;
 }
 //
 //---------------------------------------
@@ -561,8 +600,8 @@ bool BitmapFont::Load(char *fname)
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
   // Stop chararcters from bleeding over edges
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_BORDER);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 
   switch(RenderStyle)
    {
@@ -588,7 +627,7 @@ bool BitmapFont::Load(char *fname)
 
 
 // Prints text at a specifed position, again cursor is updated
-void BitmapFont::Print(char* Text, int x, int y)
+void BitmapFont::Print(char* Text, double x, double y)
  {
   int sLen,Loop;
   int Row,Col;
@@ -600,25 +639,29 @@ void BitmapFont::Print(char* Text, int x, int y)
   sLen=(int)strnlen(Text,BFG_MAXSTRING);
 
   glBegin(GL_QUADS);
+  int divider = 12;   // to reduce size of texture
+  for(Loop=0;Loop!=sLen;++Loop)
+   {
+    Row=(Text[Loop]-Base)/RowPitch;
+    Col=(Text[Loop]-Base)-Row*RowPitch;
 
-   for(Loop=0;Loop!=sLen;++Loop)
-    {
-     Row=(Text[Loop]-Base)/RowPitch;
-     Col=(Text[Loop]-Base)-Row*RowPitch;
+    U=Col*ColFactor;
+    V=Row*RowFactor;
+    U1=U+ColFactor;
+    V1=V+RowFactor;
 
-     U=Col*ColFactor;
-     V=Row*RowFactor;
-     U1=U+ColFactor;
-     V1=V+RowFactor;
+//     glTexCoord2f(U, V1); glVertex2i(CurX,      CurY);
+//     glTexCoord2f(U1,V1); glVertex2i((CurX+CellX), CurY);
+//     glTexCoord2f(U1,V ); glVertex2i((CurX+CellX), (CurY+CellY));
+//     glTexCoord2f(U, V ); glVertex2i(CurX,      (CurY+CellY));
 
-     glTexCoord2f(U, V1);  glVertex2i(CurX/2,      CurY/2);
-     glTexCoord2f(U1,V1);  glVertex2i((CurX+CellX)/2,CurY/2);
-     glTexCoord2f(U1,V ); glVertex2i((CurX+CellX)/2,(CurY+CellY)/2);
-     glTexCoord2f(U, V ); glVertex2i(CurX/2,      (CurY+CellY)/2);
-
-     CurX+=Width[Text[Loop]];
-    }
-   glEnd();
+    glTexCoord2f(U, V1); glVertex2f( (CurX/divider * wpix) , ((CurY)/divider * hpix)+CurY);
+    glTexCoord2f(U1,V1); glVertex2f( ((CurX + CellX)/divider * wpix), (CurY/divider * hpix)+CurY);
+    glTexCoord2f(U1,V ); glVertex2f( ((CurX + CellX)/divider * wpix), ((CurY + CellY)/divider * hpix)+CurY );
+    glTexCoord2f(U, V ); glVertex2f( (CurX/divider * wpix), ((CurY + CellY)/divider * hpix)+CurY );
+    CurX+=(Width[Text[Loop]]);
+   }
+  glEnd();
  }
 
 
@@ -638,22 +681,22 @@ void BitmapFont::SetBlend()
  {
   glColor3f(0,0,0);
 
-    switch(RenderStyle)
-     {
-      case BFG_RS_ALPHA: // 8Bit
-       glBlendFunc(GL_SRC_ALPHA,GL_SRC_ALPHA);
-       glEnable(GL_BLEND);
-       break;
+  switch(RenderStyle)
+   {
+    case BFG_RS_ALPHA: // 8Bit
+     glBlendFunc(GL_SRC_ALPHA,GL_SRC_ALPHA);
+     glEnable(GL_BLEND);
+     break;
 
-      case BFG_RS_RGB:   // 24Bit
-       glDisable(GL_BLEND);
-       break;
+    case BFG_RS_RGB:   // 24Bit
+     glDisable(GL_BLEND);
+     break;
 
-      case BFG_RS_RGBA:  // 32Bit
-       glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-       glEnable(GL_BLEND);
-       break;
-     }
+    case BFG_RS_RGBA:  // 32Bit
+     glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+     glEnable(GL_BLEND);
+     break;
+   }
  }
 //
 //----------------------------------------------

@@ -12,8 +12,9 @@
 #include <GL/glu.h>
 
 
-//---------------------------------------
-// unused for now
+//----------------------------------------------
+// OpenGL colors
+// float type nums
 namespace OGL {
   enum Colors
   {
@@ -45,6 +46,7 @@ class Color
 public:
   Color(OGL::Colors col);
   Color &operator=(OGL::Colors col) noexcept;
+  ~Color();
   int red();
   int green();
   int blue();
@@ -54,11 +56,34 @@ public:
   float blueF();
   float alphaF();
   void setRgbF(float redF, float greenF, float blueF, float alphaF);
+  void setRgb(int red, int green, int blue, float alpha);
 private:
   struct {float redF; float greenF; float blueF; float alphaF;}rgba;
 };
 //
-//---------------------------------------
+//----------------------------------------------
+
+
+class Grid
+{
+  Grid();
+  ~Grid();
+  void addHorizontalLine(double x, double y);
+  void addWerticalLine(double x, double y);
+  std::vector<std::vector<GLdouble>> Elements;
+};
+
+void getTicks();
+void getTickStep();
+void getSubTickStep();
+
+
+class Axis
+{
+  Axis();
+  ~Axis();
+};
+
 
 class OpenGLPlot : public QOpenGLWidget
 {
@@ -98,8 +123,10 @@ private:
   drawData paintData;
 
   struct Range{double lower; double upper;};
-  struct Axis{Range xRange; Range yRange;};
-  Axis sizeAxis;
+  struct {Range xRange; Range yRange;}sizeRange;
+
+  int plotWidth;
+  int plotHeight;
 
   bool dataChanged;
 
@@ -115,8 +142,8 @@ private:
 
   QColor penColor;
 
-  int lines_width;
-  int lines_height;
+  int gridLinesWidth;
+  int gridLinesHeight;
 
   std::vector<GLdouble> Vertex;
 };
@@ -149,7 +176,7 @@ public:
   BitmapFont();
  ~BitmapFont();
   bool Load(char *fname);
-  void Print(char *Text, int x, int y);
+  void Print(char *Text, double x, double y);
   void Select();
   void Bind();
   void SetBlend();
@@ -161,7 +188,7 @@ private:
   char Base;
   char Width[256];
   int RenderStyle;
-  int CurX,CurY;
+  double CurX,CurY;
 };
 //
 //----------------------------------------------

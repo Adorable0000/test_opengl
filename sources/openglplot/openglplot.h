@@ -41,24 +41,34 @@ namespace OGL {
 }
 
 
-class Color
+class OGLColor
 {
 public:
-  Color(OGL::Colors col);
-  Color &operator=(OGL::Colors col) noexcept;
-  ~Color();
+  OGLColor();
+  OGLColor(OGL::Colors col);
+  OGLColor(const OGLColor &col);
+
+  OGLColor &operator=(const OGLColor &col);
+  OGLColor &operator=(OGL::Colors col);
+  bool operator==(const OGLColor &col) const;
+  bool operator!=(const OGLColor &col) const;
+
+  ~OGLColor();
+
   int red();
   int green();
   int blue();
   int alpha();
+
   float redF();
   float greenF();
   float blueF();
   float alphaF();
+
   void setRgbF(float redF, float greenF, float blueF, float alphaF);
   void setRgb(int red, int green, int blue, float alpha);
-private:
-  struct {float redF; float greenF; float blueF; float alphaF;}rgba;
+
+  struct {float redF; float greenF; float blueF; float alphaF = 1;}rgba;
 };
 //
 //----------------------------------------------
@@ -66,20 +76,30 @@ private:
 
 class Grid
 {
+public:
   Grid();
   ~Grid();
+
   void addHorizontalLine(double x, double y);
   void addWerticalLine(double x, double y);
   std::vector<std::vector<GLdouble>> Elements;
 };
 
-void getTicks();
-void getTickStep();
-void getSubTickStep();
+
+class TicksHandler
+{
+public:
+  TicksHandler();
+  ~TicksHandler();
+  void getTicks();
+  void getTickStep();
+  void getSubTickStep();
+};
 
 
 class Axis
 {
+public:
   Axis();
   ~Axis();
 };
@@ -94,10 +114,10 @@ public:
   ~OpenGLPlot();
   void addData(std::vector<double> &keys, std::vector<double> &values);
 
-  void setColor(QColor col);
   void setColorf(float red, float green, float blue);
   void setColor(int red, int green, int blue);
-  void setColor(Color &col);
+  void setQColor(QColor col);
+  void setColor(OGLColor col);
 
   void setYRange(double min, double max);
   void setXRange(double min, double max);
@@ -116,8 +136,8 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
 
 private:
-  void insertColomn(int pos, double min, double max);
-  void insertRow();
+//  void insertColomn(int pos, double min, double max);
+//  void insertRow();
 
   struct drawData{std::vector<double> xData; std::vector<double> yData;};
   drawData paintData;
@@ -140,7 +160,8 @@ private:
 
   int wheelMove;
 
-  QColor penColor;
+  QColor penQColor;
+  OGLColor penColor;
 
   int gridLinesWidth;
   int gridLinesHeight;

@@ -70,8 +70,8 @@ void OpenGLPlot::resizeGL(int width, int height)
   w = width; h = height;    // test values
   plotWidth = width;
   plotHeight = height;
-  gridLinesWidth = width;
   gridLinesHeight = height;
+  gridLinesWidth = width;
 
 //  Keep grid lines sizes divisible by 4 so that
 //  last line will always touch the higher line
@@ -177,7 +177,7 @@ void OpenGLPlot::paintGL()
   vLine2[2] = xlow;
   vLine2[3] = yup;
 */
-/*
+
     if(dataChanged)
     {
       if(Vertex.size() != xbounds*2)  {Vertex.resize(xbounds*2);}
@@ -188,7 +188,7 @@ void OpenGLPlot::paintGL()
         }
       dataChanged = false;
     }
-*/
+
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -236,19 +236,19 @@ void OpenGLPlot::paintGL()
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 */
-/*
-  glColor4f(penColor.red(), penColor.green(), penColor.blue(),penColor.alpha());   // Set texture color
+
+  glColor4f(penColor.redF(), penColor.greenF(), penColor.blueF(), penColor.alphaF());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
-*/
+
 
 //--------------------------------------------------------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
   Font.Select();
 //  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
-  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*10));
+  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow);
 //
 //--------------------------------------------------------------------------------------------
 
@@ -293,11 +293,20 @@ void OpenGLPlot::setXRange(double min, double max)
 }
 
 
-void OpenGLPlot::setColor(QColor col)
+void OpenGLPlot::setColor(OGLColor col)
 {
   if(penColor != col)
     {
       penColor = col;
+    }
+}
+
+
+void OpenGLPlot::setQColor(QColor col)
+{
+  if(penQColor != col)
+    {
+      penQColor = col;
     }
 }
 
@@ -374,28 +383,34 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 
 //---------------------------------------
 // OpenGL colors
-Color::Color(OGL::Colors col)
+OGLColor::OGLColor()
+{
+
+}
+
+
+OGLColor::OGLColor(OGL::Colors col)
 {
   static const float colors[][4] = {
-    {0.0f, 0.0f, 0.0f, 0.0f},     // black
-    {1.0f, 1.0f, 1.0f, 0.0f},     // white
-    {0.1f, 0.1f, 0.1f, 0.0f},     // darkGray
-    {0.5f, 0.5f, 0.1f, 0.0f},     // gray
-    {0.7f, 0.7f, 0.7f, 0.0f},     // lightGray
-    {1.0f, 0.0f, 0.0f, 0.0f},     // red
-    {0.0f, 1.0f, 0.0f, 0.0f},     // green
-    {0.0f, 0.0f, 1.0f, 0.0f},     // blue
-    {0.5f, 1.0f, 1.0f, 0.0f},     // cyan
-    {1.0f, 0.0f, 1.0f, 0.0f},     // magenta
-    {1.0f, 1.0f, 0.0f, 0.0f},     // yellow
-    {0.5f, 0.0f, 0.0f, 0.0f},     // darkRed
-    {0.0f, 0.5f, 0.0f, 0.0f},     // darkGreen
-    {0.0f, 0.0f, 0.5f, 0.0f},     // darkBlue
-    {0.0f, 0.5f, 0.5f, 0.0f},     // darkCyan
-    {0.5f, 0.0f, 0.5f, 0.0f},     // darkMagenta
-    {0.5f, 0.5f, 0.0f, 0.0f},     // darkYellow
-    {1.0f, 0.0f, 1.0f, 0.0f},     // purple
-    {0.5f, 0.25f, 0.0f, 0.0f},    // brown
+    {0.0f, 0.0f, 0.0f, 1.0f},     // black
+    {1.0f, 1.0f, 1.0f, 1.0f},     // white
+    {0.1f, 0.1f, 0.1f, 1.0f},     // darkGray
+    {0.5f, 0.5f, 0.1f, 1.0f},     // gray
+    {0.7f, 0.7f, 0.7f, 1.0f},     // lightGray
+    {1.0f, 0.0f, 0.0f, 1.0f},     // red
+    {0.0f, 1.0f, 0.0f, 1.0f},     // green
+    {0.0f, 0.0f, 1.0f, 1.0f},     // blue
+    {0.5f, 1.0f, 1.0f, 1.0f},     // cyan
+    {1.0f, 0.0f, 1.0f, 1.0f},     // magenta
+    {1.0f, 1.0f, 0.0f, 1.0f},     // yellow
+    {0.5f, 0.0f, 0.0f, 1.0f},     // darkRed
+    {0.0f, 0.5f, 0.0f, 1.0f},     // darkGreen
+    {0.0f, 0.0f, 0.5f, 1.0f},     // darkBlue
+    {0.0f, 0.5f, 0.5f, 1.0f},     // darkCyan
+    {0.5f, 0.0f, 0.5f, 1.0f},     // darkMagenta
+    {0.5f, 0.5f, 0.0f, 1.0f},     // darkYellow
+    {1.0f, 0.0f, 1.0f, 1.0f},     // purple
+    {0.5f, 0.25f, 0.0f, 1.0f},    // brown
   };
 
   setRgbF(
@@ -406,13 +421,19 @@ Color::Color(OGL::Colors col)
 }
 
 
-Color::~Color()
+OGLColor::OGLColor(const OGLColor &col)
+{
+  rgba = col.rgba;
+}
+
+
+OGLColor::~OGLColor()
 {
 
 }
 
 
-void Color::setRgbF(float redF, float greenF, float blueF, float alphaF)
+void OGLColor::setRgbF(float redF, float greenF, float blueF, float alphaF)
 {
   if((redF > 1) || (greenF > 1)|| (blueF > 1) || (alphaF > 1))
     {
@@ -425,7 +446,7 @@ void Color::setRgbF(float redF, float greenF, float blueF, float alphaF)
 }
 
 
-void Color::setRgb(int red, int green, int blue, float alpha)
+void OGLColor::setRgb(int red, int green, int blue, float alpha)
 {
   if((red > 255) || (green > 255)|| (blue > 255) || (alpha > 255))
     {
@@ -435,6 +456,58 @@ void Color::setRgb(int red, int green, int blue, float alpha)
   rgba.greenF = green / 255;
   rgba.blueF = blue / 255;
   rgba.alphaF = alpha / 255;
+}
+
+
+float OGLColor::redF()
+{
+  return rgba.redF;
+}
+
+
+float OGLColor::greenF()
+{
+  return rgba.greenF;
+}
+
+
+float OGLColor::blueF()
+{
+  return rgba.blueF;
+}
+
+
+float OGLColor::alphaF()
+{
+  return rgba.alphaF;
+}
+
+
+bool OGLColor::operator!=(const OGLColor &col) const
+{
+  return !operator==(col);
+}
+
+
+bool OGLColor::operator==(const OGLColor &col) const
+{
+return((rgba.redF == col.rgba.redF) &&
+       (rgba.greenF == col.rgba.greenF) &&
+       (rgba.blueF == col.rgba.blueF) &&
+       (rgba.alphaF == col.rgba.alphaF));
+}
+
+
+OGLColor &OGLColor::operator=(const OGLColor &col)
+{
+  rgba = col.rgba;
+  return *this;
+}
+
+
+OGLColor &OGLColor::operator=(OGL::Colors col)
+{
+  return operator=(OGLColor(col));
 }
 //
 //---------------------------------------

@@ -2,19 +2,20 @@
 #define OPENGLPLOT_H
 
 #include <QOpenGLWidget>
-#include <QOpenGLExtraFunctions>
+#include <QOpenGLFunctions>
 
 #include <QMouseEvent>
 #include <QWheelEvent>
-#include <QColor>
+//#include <QColor>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
 
 //----------------------------------------------
-// OpenGL colors
-// float type nums
+//  OpenGL colors
+//  used for portability
+//  float type nums
 namespace OGL {
   enum Colors
   {
@@ -45,6 +46,7 @@ class OGLColor
 {
 public:
   OGLColor();
+  OGLColor(float r, float g, float b, float a = 1);
   OGLColor(OGL::Colors col);
   OGLColor(const OGLColor &col);
 
@@ -82,6 +84,8 @@ public:
 
   void addHorizontalLine(double x, double y);
   void addWerticalLine(double x, double y);
+
+private:
   std::vector<std::vector<GLdouble>> Elements;
 };
 
@@ -91,8 +95,11 @@ class TicksHandler
 public:
   TicksHandler();
   ~TicksHandler();
-  void getTicks();
+
+  void getTickCount();
   void getTickStep();
+
+  void getSubTickCount();
   void getSubTickStep();
 };
 
@@ -105,7 +112,7 @@ public:
 };
 
 
-class OpenGLPlot : public QOpenGLWidget
+class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions
 {
   Q_OBJECT
 
@@ -160,7 +167,7 @@ private:
 
   int wheelMove;
 
-  QColor penQColor;
+//  QColor penQColor;
   OGLColor penColor;
 
   int gridLinesWidth;

@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   for(int i = 0; i < size; i++)
   {
     x1[i] = i;
-    y1[i] = (sin(2 * 3.14 * i)/* * (1 << 11)) + (1 << 11*/)-10;
+    y1[i] = (sin(2 * 3.14 * i)/* * (1 << 11)) + (1 << 11*/);
     x2[i] = i;
     y2[i] = (cos(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
   }

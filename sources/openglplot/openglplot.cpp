@@ -5,6 +5,10 @@
 
 BitmapFont Font;    // test
 FreeTypeFont fr;    // test
+FT_Face face;       // test
+FT_Library ft;      // test
+
+
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   dataChanged = false;
@@ -40,12 +44,14 @@ OpenGLPlot::~OpenGLPlot()
 
 void OpenGLPlot::initializeGL()
 {
+  initializeOpenGLFunctions();
+
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set white background color
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
-  glEnable(GL_BLEND);                                 // Enable color mix
+ glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
-  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);            // Set fastest line smoothing
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);            // Set fastest line smoothing
   glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
 
@@ -195,8 +201,8 @@ void OpenGLPlot::paintGL()
 
   glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*10), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 //  glOrtho(0,(w),0,(h),-1,1);
-  printf("Width %d\n", w);
-  printf("Height %d\n", h);
+//  printf("Width %d\n", w);
+//  printf("Height %d\n", h);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -246,18 +252,26 @@ void OpenGLPlot::paintGL()
 //--------------------------------------------------------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
-  Font.Select();
+//  Font.Select();
 //  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
-  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow);
+//  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow);
+
 //
 //--------------------------------------------------------------------------------------------
 
 //  GLint a;
 //  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &a);
 //  printf("%d\n", a);
+
 }
 
 
+/*!
+ * @brief OpenGLPlot::addData
+ * @param keys
+ * @param values
+ *
+ */
 void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 {
   if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()))
@@ -293,6 +307,39 @@ void OpenGLPlot::setXRange(double min, double max)
 }
 
 
+/*!
+ * @fn OpenGLPlot::setColor
+ * @param col can be OGLColor class or preimplemented
+ * color from OGL namespace
+ *
+ * Set color of the graph. Passed parameter can be both
+ * OGLColor class or reimplemented color from
+ * OGL namespace. If using OGLColor class, you need to
+ * call the class constructor OGLColor::OGLColor(),
+ * then use OGLColor::setRgbF() and call this function.
+ * Also, you can use this function with OGL namespace
+ * color like OGL::(color name).
+ * Color name can be:
+ * black
+ * white
+ * darkGray
+ * gray
+ * lightGray
+ * red
+ * green
+ * blue
+ * cyan
+ * magenta
+ * yellow
+ * darkRed
+ * darkGreen
+ * darkBlue
+ * darkCyan
+ * darkMagenta
+ * darkYellow
+ * purple
+ * brown.
+ */
 void OpenGLPlot::setColor(OGLColor col)
 {
   if(penColor != col)
@@ -302,13 +349,13 @@ void OpenGLPlot::setColor(OGLColor col)
 }
 
 
-void OpenGLPlot::setQColor(QColor col)
-{
-  if(penQColor != col)
-    {
-      penQColor = col;
-    }
-}
+//void OpenGLPlot::setQColor(QColor col)
+//{
+//  if(penQColor != col)
+//    {
+//      penQColor = col;
+//    }
+//}
 
 
 //---------------------------------------
@@ -381,14 +428,61 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 }
 
 
-//---------------------------------------
-// OpenGL colors
+/*!
+ * @class OGLColor
+ * @brief OGLColor class provides colors based on RGB float values
+ *
+ * Color is specified in terms of RGB (red, green, blue).
+ *
+ * OGLColor constructor creates the color based on RGB values.
+ * Passed values should be float type because of OpenGL
+ * specs. Alternatively, constructor can be called with
+ * preimplemented color from OGL namespace.
+*/
+
+/*!
+ * @brief OGLColor::OGLColor
+ *
+ * Construct OGLColor class with all components set to zero
+ * Red = 0, Green = 0, Blue = 0, Alpha = 0
+ */
 OGLColor::OGLColor()
 {
-
+  rgba.redF = 0;
+  rgba.greenF = 0;
+  rgba.blueF = 0;
+  rgba.alphaF = 0;
 }
 
 
+/*!
+ * @brief OGLColor::OGLColor
+ * @param col premplemented color from OGL namespace
+ *
+ * Construct OGLColor class using prepremplemented
+ * color from OGL namespace. Color is set using
+ * OGL::(color name).
+ * Color name can be:
+ * black
+ * white
+ * darkGray
+ * gray
+ * lightGray
+ * red
+ * green
+ * blue
+ * cyan
+ * magenta
+ * yellow
+ * darkRed
+ * darkGreen
+ * darkBlue
+ * darkCyan
+ * darkMagenta
+ * darkYellow
+ * purple
+ * brown.
+ */
 OGLColor::OGLColor(OGL::Colors col)
 {
   static const float colors[][4] = {
@@ -421,18 +515,35 @@ OGLColor::OGLColor(OGL::Colors col)
 }
 
 
+/*!
+ * @brief OGLColor::OGLColor
+ * @param col OGLColor class
+ *
+ */
 OGLColor::OGLColor(const OGLColor &col)
 {
   rgba = col.rgba;
 }
 
 
+/*!
+ * @brief OGLColor::~OGLColor
+ */
 OGLColor::~OGLColor()
 {
 
 }
 
 
+/*!
+ * @brief OGLColor::setRgbF Set color in float
+ * @param redF
+ * @param greenF
+ * @param blueF
+ * @param alphaF
+ *
+ *
+ */
 void OGLColor::setRgbF(float redF, float greenF, float blueF, float alphaF)
 {
   if((redF > 1) || (greenF > 1)|| (blueF > 1) || (alphaF > 1))
@@ -446,6 +557,13 @@ void OGLColor::setRgbF(float redF, float greenF, float blueF, float alphaF)
 }
 
 
+/*!
+ * @brief OGLColor::setRgb
+ * @param red
+ * @param green
+ * @param blue
+ * @param alpha
+ */
 void OGLColor::setRgb(int red, int green, int blue, float alpha)
 {
   if((red > 255) || (green > 255)|| (blue > 255) || (alpha > 255))
@@ -459,36 +577,70 @@ void OGLColor::setRgb(int red, int green, int blue, float alpha)
 }
 
 
+/*!
+ * @brief OGLColor::redF
+ * @return red component of color. float type
+ *
+ *
+ */
 float OGLColor::redF()
 {
   return rgba.redF;
 }
 
 
+/*!
+ * @brief OGLColor::greenF
+ * @return green component of color. float type
+ *
+ *
+ */
 float OGLColor::greenF()
 {
   return rgba.greenF;
 }
 
 
+/*!
+ * @brief OGLColor::blueF
+ * @return blue component of color. float type
+ *
+ *
+ */
 float OGLColor::blueF()
 {
   return rgba.blueF;
 }
 
 
+/*!
+ * @brief OGLColor::alphaF
+ * @return alpha component of color, or color intensity. float type
+ *
+ *
+ */
 float OGLColor::alphaF()
 {
   return rgba.alphaF;
 }
 
 
+/*!
+ * @brief OGLColor::operator !=
+ * @param col
+ * @return bool type enum
+ */
 bool OGLColor::operator!=(const OGLColor &col) const
 {
   return !operator==(col);
 }
 
 
+/*!
+ * @brief OGLColor::operator ==
+ * @param col
+ * @return
+ */
 bool OGLColor::operator==(const OGLColor &col) const
 {
 return((rgba.redF == col.rgba.redF) &&
@@ -498,6 +650,11 @@ return((rgba.redF == col.rgba.redF) &&
 }
 
 
+/*!
+ * @brief OGLColor::operator =
+ * @param col
+ * @return
+ */
 OGLColor &OGLColor::operator=(const OGLColor &col)
 {
   rgba = col.rgba;
@@ -505,6 +662,11 @@ OGLColor &OGLColor::operator=(const OGLColor &col)
 }
 
 
+/*!
+ * @brief OGLColor::operator =
+ * @param col
+ * @return
+ */
 OGLColor &OGLColor::operator=(OGL::Colors col)
 {
   return operator=(OGLColor(col));
@@ -522,9 +684,6 @@ FreeTypeFont::FreeTypeFont()
 }
 
 
-FT_Face face;
-FT_Library ft;
-
 FreeTypeFont::~FreeTypeFont()
 {
   FT_Done_FreeType(ft);
@@ -536,16 +695,22 @@ void FreeTypeFont::ftInit()
   if(FT_Init_FreeType(&ft))
     {
       printf("Error, can't load freetype\n");
+      return;
     }
-
   if(FT_New_Face(ft, "/usr/share/fonts/truetype/dejavu/DejaVuMathTeXGyre.ttf", 0, &face))
     {
       printf("Error, can't load font\n");
+      return;
     }
-  FT_Set_Pixel_Sizes(face, 0, 48);
-  if(FT_Load_Char(face, 'X', FT_LOAD_RENDER))
+  if(FT_Set_Pixel_Sizes(face, 0, 48))
+    {
+      printf("Error, can't set size");
+      return;
+    }
+  if(FT_Load_Char(face, '0', FT_LOAD_RENDER))
     {
       printf("Error, can't load glyph\n");
+      return;
     }
 }
 
@@ -670,11 +835,11 @@ bool BitmapFont::Load(char *fname)
   glGenTextures(1,&TexID);
   glBindTexture(GL_TEXTURE_2D,TexID);
   // Fonts should be rendered at native resolution so no need for texture filtering
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
   // Stop chararcters from bleeding over edges
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
 
   switch(RenderStyle)
    {
@@ -712,7 +877,7 @@ void BitmapFont::Print(char* Text, double x, double y)
   sLen=(int)strnlen(Text,BFG_MAXSTRING);
 
   glBegin(GL_QUADS);
-  int divider = 12;   // to reduce size of texture
+  int divider = 16;   // to reduce size of texture
   for(Loop=0;Loop!=sLen;++Loop)
    {
     Row=(Text[Loop]-Base)/RowPitch;

@@ -42,6 +42,9 @@ OpenGLPlot::~OpenGLPlot()
 }
 
 
+/*!
+ * \brief OpenGLPlot::initializeGL
+ */
 void OpenGLPlot::initializeGL()
 {
   initializeOpenGLFunctions();
@@ -49,16 +52,16 @@ void OpenGLPlot::initializeGL()
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set white background color
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
- glEnable(GL_BLEND);                                 // Enable color mix
+  glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);            // Set fastest line smoothing
+  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);             // Set fastest line smoothing
   glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
 
 //----------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
-  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_high_res_bold.bff"))
+  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_high_res.bff"))
     {
       printf("Can't load\n");
       return;
@@ -68,6 +71,11 @@ void OpenGLPlot::initializeGL()
 }
 
 int w, h;   // test values
+/*!
+ * \brief OpenGLPlot::resizeGL
+ * \param width
+ * \param height
+ */
 void OpenGLPlot::resizeGL(int width, int height)
 {
   glMatrixMode(GL_PROJECTION);
@@ -99,6 +107,9 @@ void OpenGLPlot::resizeGL(int width, int height)
 
 double wpix;        // test value
 double hpix;        // test value
+/*!
+ * \brief OpenGLPlot::paintGL
+ */
 void OpenGLPlot::paintGL()
 {
   double xlow = sizeRange.xRange.lower;
@@ -113,6 +124,7 @@ void OpenGLPlot::paintGL()
   double hpixel = ybounds/hsize;    // height of pixel relative to graph
   wpix = xbounds/w;  // test value
   hpix = ybounds/h;  // test value
+
 
 //  std::vector<std::vector<GLdouble>> h1;
 //  h1.resize(2);
@@ -199,7 +211,7 @@ void OpenGLPlot::paintGL()
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
 
-  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*10), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 //  glOrtho(0,(w),0,(h),-1,1);
 //  printf("Width %d\n", w);
 //  printf("Height %d\n", h);
@@ -252,10 +264,11 @@ void OpenGLPlot::paintGL()
 //--------------------------------------------------------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
-//  Font.Select();
+  glEnable(GL_TEXTURE_2D);
+  Font.Select();
 //  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
-//  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow);
-
+  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*18));     // size of textures is 16 pixels, so we should add 2 pixels
+  glDisable(GL_TEXTURE_2D);
 //
 //--------------------------------------------------------------------------------------------
 
@@ -267,9 +280,9 @@ void OpenGLPlot::paintGL()
 
 
 /*!
- * @brief OpenGLPlot::addData
- * @param keys
- * @param values
+ * \brief OpenGLPlot::addData
+ * \param keys
+ * \param values
  *
  */
 void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
@@ -308,8 +321,8 @@ void OpenGLPlot::setXRange(double min, double max)
 
 
 /*!
- * @fn OpenGLPlot::setColor
- * @param col can be OGLColor class or preimplemented
+ * \fn OpenGLPlot::setColor
+ * \param col can be OGLColor class or preimplemented
  * color from OGL namespace
  *
  * Set color of the graph. Passed parameter can be both
@@ -429,8 +442,8 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 
 
 /*!
- * @class OGLColor
- * @brief OGLColor class provides colors based on RGB float values
+ * \class OGLColor
+ * \brief OGLColor class provides colors based on RGB float values
  *
  * Color is specified in terms of RGB (red, green, blue).
  *
@@ -441,7 +454,7 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 */
 
 /*!
- * @brief OGLColor::OGLColor
+ * \brief OGLColor::OGLColor
  *
  * Construct OGLColor class with all components set to zero
  * Red = 0, Green = 0, Blue = 0, Alpha = 0
@@ -456,8 +469,8 @@ OGLColor::OGLColor()
 
 
 /*!
- * @brief OGLColor::OGLColor
- * @param col premplemented color from OGL namespace
+ * \brief OGLColor::OGLColor
+ * \param col premplemented color from OGL namespace
  *
  * Construct OGLColor class using prepremplemented
  * color from OGL namespace. Color is set using
@@ -516,8 +529,8 @@ OGLColor::OGLColor(OGL::Colors col)
 
 
 /*!
- * @brief OGLColor::OGLColor
- * @param col OGLColor class
+ * \brief OGLColor::OGLColor
+ * \param col OGLColor class
  *
  */
 OGLColor::OGLColor(const OGLColor &col)
@@ -527,7 +540,7 @@ OGLColor::OGLColor(const OGLColor &col)
 
 
 /*!
- * @brief OGLColor::~OGLColor
+ * \brief OGLColor::~OGLColor
  */
 OGLColor::~OGLColor()
 {
@@ -536,11 +549,11 @@ OGLColor::~OGLColor()
 
 
 /*!
- * @brief OGLColor::setRgbF Set color in float
- * @param redF
- * @param greenF
- * @param blueF
- * @param alphaF
+ * \brief OGLColor::setRgbF Set color in float
+ * \param redF
+ * \param greenF
+ * \param blueF
+ * \param alphaF
  *
  *
  */
@@ -558,11 +571,11 @@ void OGLColor::setRgbF(float redF, float greenF, float blueF, float alphaF)
 
 
 /*!
- * @brief OGLColor::setRgb
- * @param red
- * @param green
- * @param blue
- * @param alpha
+ * \brief OGLColor::setRgb
+ * \param red
+ * \param green
+ * \param blue
+ * \param alpha
  */
 void OGLColor::setRgb(int red, int green, int blue, float alpha)
 {
@@ -578,8 +591,8 @@ void OGLColor::setRgb(int red, int green, int blue, float alpha)
 
 
 /*!
- * @brief OGLColor::redF
- * @return red component of color. float type
+ * \brief OGLColor::redF
+ * \return red component of color. float type
  *
  *
  */
@@ -590,8 +603,8 @@ float OGLColor::redF()
 
 
 /*!
- * @brief OGLColor::greenF
- * @return green component of color. float type
+ * \brief OGLColor::greenF
+ * \return green component of color. float type
  *
  *
  */
@@ -602,8 +615,8 @@ float OGLColor::greenF()
 
 
 /*!
- * @brief OGLColor::blueF
- * @return blue component of color. float type
+ * \brief OGLColor::blueF
+ * \return blue component of color. float type
  *
  *
  */
@@ -614,8 +627,8 @@ float OGLColor::blueF()
 
 
 /*!
- * @brief OGLColor::alphaF
- * @return alpha component of color, or color intensity. float type
+ * \brief OGLColor::alphaF
+ * \return alpha component of color, or color intensity. float type
  *
  *
  */
@@ -626,9 +639,9 @@ float OGLColor::alphaF()
 
 
 /*!
- * @brief OGLColor::operator !=
- * @param col
- * @return bool type enum
+ * \brief OGLColor::operator !=
+ * \param col
+ * \return bool type enum
  */
 bool OGLColor::operator!=(const OGLColor &col) const
 {
@@ -637,9 +650,9 @@ bool OGLColor::operator!=(const OGLColor &col) const
 
 
 /*!
- * @brief OGLColor::operator ==
- * @param col
- * @return
+ * \brief OGLColor::operator ==
+ * \param col
+ * \return
  */
 bool OGLColor::operator==(const OGLColor &col) const
 {
@@ -651,9 +664,9 @@ return((rgba.redF == col.rgba.redF) &&
 
 
 /*!
- * @brief OGLColor::operator =
- * @param col
- * @return
+ * \brief OGLColor::operator =
+ * \param col
+ * \return
  */
 OGLColor &OGLColor::operator=(const OGLColor &col)
 {
@@ -663,9 +676,9 @@ OGLColor &OGLColor::operator=(const OGLColor &col)
 
 
 /*!
- * @brief OGLColor::operator =
- * @param col
- * @return
+ * \brief OGLColor::operator =
+ * \param col
+ * \return
  */
 OGLColor &OGLColor::operator=(OGL::Colors col)
 {
@@ -836,7 +849,7 @@ bool BitmapFont::Load(char *fname)
   glBindTexture(GL_TEXTURE_2D,TexID);
   // Fonts should be rendered at native resolution so no need for texture filtering
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
   // Stop chararcters from bleeding over edges
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
@@ -877,7 +890,7 @@ void BitmapFont::Print(char* Text, double x, double y)
   sLen=(int)strnlen(Text,BFG_MAXSTRING);
 
   glBegin(GL_QUADS);
-  int divider = 16;   // to reduce size of texture
+  int divider = 16;   // to reduce size of texture to 16 pixels, current texture size is 256
   for(Loop=0;Loop!=sLen;++Loop)
    {
     Row=(Text[Loop]-Base)/RowPitch;
@@ -905,8 +918,8 @@ void BitmapFont::Print(char* Text, double x, double y)
 
 void BitmapFont::Select()
  {
-  glEnable(GL_TEXTURE_2D);
   Bind();
+  glColor3f(0,0,0);
   SetBlend();
  }
 
@@ -917,8 +930,6 @@ void BitmapFont::Bind()
 
 void BitmapFont::SetBlend()
  {
-  glColor3f(0,0,0);
-
   switch(RenderStyle)
    {
     case BFG_RS_ALPHA: // 8Bit

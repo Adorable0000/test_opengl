@@ -9,6 +9,56 @@ FT_Face face;       // test
 FT_Library ft;      // test
 
 
+/*!
+ * \brief fragmentShaderSmooth shader source code
+ * Filtering line by adjusting the fragment's alpha
+ * value based on the distance to the line.
+ * To calculate the fragment's alpha value the
+ * fragment's distance to the line is compared
+ * with the current linewidth and apply the power
+ * function to the normalized difference between
+ * those to achieve desired blurriness of the line
+ */
+static const char *fragmentShaderSmooth =
+    "#version 200\n"
+    "uniform float uLineWidth;\n"
+    "uniform vec4 uColor;\n"
+    "uniform float uBlendFactor;\n"
+    "varying vec2 vLineCenter;\n"
+    "void main(void)\n"
+    "{\n"
+    " vec4 col = uColor;\n"
+    " double d = length(vLineCenter-gl_FragCoord.xy);\n"
+    " double w = uLineWidth;\n"
+    " if (d>w)\n"
+    "   col.w = 0;\n"
+    " else\n"
+    "   col.w *= pow(float((w-d)/w), uBlendFactor);\n"
+    " gl_FragColor = col;"
+    "}\n";
+
+
+/*!
+ * \brief vertexShaderSmooth shader source code.
+ * Calculating the distance from a fragment
+ * to the line using the interpolated line
+ * center point attribute.
+ * Vertex transforming the normalized projected
+ * vertex position to the viewport space
+ */
+static const char *vertexShaderSmooth =
+    "#version 200\n"
+    "uniform vec2 uViewPort;\n"
+    "varying vec2 vLineCenter;\n"
+    "void main(void)\n"
+    "{\n"
+    " vec4 pp = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
+    " gl_Position = pp;\n"
+    " vec2 vp = uViewPort;\n"
+    " vLineCenter = 0.5*(pp.xy + vec2(1, 1))*vp;\n"
+    "}\n";
+
+
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
   dataChanged = false;
@@ -49,7 +99,7 @@ void OpenGLPlot::initializeGL()
 {
   initializeOpenGLFunctions();
 
-  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set white background color
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set background color
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
   glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
@@ -70,7 +120,7 @@ void OpenGLPlot::initializeGL()
 //----------------------------------------------
 }
 
-int w, h;   // test values
+
 /*!
  * \brief OpenGLPlot::resizeGL
  * \param width
@@ -81,28 +131,28 @@ void OpenGLPlot::resizeGL(int width, int height)
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
   glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
-  w = width; h = height;    // test values
   plotWidth = width;
   plotHeight = height;
   gridLinesHeight = height;
   gridLinesWidth = width;
 
 //  Keep grid lines sizes divisible by 4 so that
-//  last line will always touch the higher line
-//  Remember that 1 line need 4 numbers
+//  the last line will always touch the higher line
+//  Remember that 1 line need 4 values
   int mar_h = gridLinesHeight % 4;
   if(mar_h > 0)
     {
-      gridLinesHeight -= mar_h;
+      gridLinesHeight += (4-mar_h);
     }
 
   int mar_w = gridLinesWidth % 4;
   if(mar_w > 0)
     {
-      gridLinesWidth -= mar_w;
+      gridLinesWidth += (4-mar_w);
     }
 
   dataChanged = true;
+  printf("%s\n", glGetString(GL_VERSION));
 }
 
 double wpix;        // test value
@@ -118,13 +168,12 @@ void OpenGLPlot::paintGL()
   double ylow = sizeRange.yRange.lower;
   double yup = sizeRange.yRange.upper;
   double ybounds = yup - ylow;
-  double hsize = gridLinesHeight;
-  double wsize = gridLinesWidth;
-  double wpixel = xbounds/wsize;    // width of pixel relative to graph
-  double hpixel = ybounds/hsize;    // height of pixel relative to graph
-  wpix = xbounds/w;  // test value
-  hpix = ybounds/h;  // test value
-
+  int hlinesize = gridLinesHeight;
+  int wlinesize = gridLinesWidth;
+  double wpixel = xbounds/plotWidth;    // width of pixel relative to graph
+  double hpixel = ybounds/plotHeight;    // height of pixel relative to graph
+  wpix = xbounds/plotWidth;  // test value
+  hpix = ybounds/plotHeight;  // test value
 
 //  std::vector<std::vector<GLdouble>> h1;
 //  h1.resize(2);
@@ -138,35 +187,35 @@ void OpenGLPlot::paintGL()
     }
 
   std::vector<GLdouble> hLine1;
-  hLine1.resize(wsize);
+  hLine1.resize(wlinesize);
 
   std::vector<GLdouble> hLine2;
-  hLine2.resize(wsize);
+  hLine2.resize(wlinesize);
 
   std::vector<GLdouble> hLine3;
-  hLine3.resize(wsize);
+  hLine3.resize(wlinesize);
 
   std::vector<GLdouble> hLine4;
   hLine4.resize(2*2);
 
-  std::vector<GLdouble> hLine5;
-  hLine5.resize(wsize);
-
   std::vector<GLdouble> vLine1;
-  vLine1.resize(hsize);
+  vLine1.resize(hlinesize);
 
   std::vector<GLdouble> vLine2;
   vLine2.resize(2*2);
 
   std::vector<GLdouble> vLine3;
-  vLine3.resize(hsize);
+  vLine3.resize(hlinesize);
+
+  std::vector<GLdouble> hLine5;
+  hLine5.resize(wlinesize);
 
   hLine4[0] = xlow;
   hLine4[1] = ylow;
   hLine4[2] = xup;
   hLine4[3] = ylow;
 
-  for(int i = 0; i < wsize; i+=2)
+  for(int i = 0; i < wlinesize; i+=2)
     {
       hLine1[i] = xlow + i * wpixel;
       hLine1[i+1] = (yup + ylow)/2;
@@ -181,7 +230,7 @@ void OpenGLPlot::paintGL()
       hLine5[i+1] = yup;
     }
 
-  for(int i = 0; i < hsize; i+=2)
+  for(int i = 0; i < hlinesize; i+=2)
     {
       vLine1[i] = (xup + xlow)/2;
       vLine1[i+1] = ylow + i * hpixel;
@@ -213,8 +262,8 @@ void OpenGLPlot::paintGL()
 
   glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 //  glOrtho(0,(w),0,(h),-1,1);
-//  printf("Width %d\n", w);
-//  printf("Height %d\n", h);
+  printf("Width %d\n", plotWidth);
+  printf("Height %d\n", plotHeight);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -229,9 +278,6 @@ void OpenGLPlot::paintGL()
   glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
   glDrawArrays(GL_LINES, 0, vLine1.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, vLine3.data());
-  glDrawArrays(GL_LINES, 0, vLine3.size()/2);
-
   glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
   glDrawArrays(GL_LINES, 0, hLine1.size()/2);
 
@@ -241,25 +287,25 @@ void OpenGLPlot::paintGL()
   glVertexPointer(2, GL_DOUBLE, 0, hLine3.data());
   glDrawArrays(GL_LINES, 0, hLine3.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
-  glDrawArrays(GL_LINES, 0, hLine5.size()/2);
-
-  glColor4f(0,0,0,0.6);
   glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
   glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
 
   glVertexPointer(2, GL_DOUBLE, 0, vLine2.data());
   glDrawArrays(GL_LINE_STRIP, 0, vLine2.size()/2);
 
+  glVertexPointer(2, GL_DOUBLE, 0, vLine3.data());
+  glDrawArrays(GL_LINES, 0, vLine3.size()/2);
+
+  glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
+  glDrawArrays(GL_LINES, 0, hLine5.size()/2);
+
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
 */
-
   glColor4f(penColor.redF(), penColor.greenF(), penColor.blueF(), penColor.alphaF());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
-
 
 //--------------------------------------------------------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
@@ -740,7 +786,6 @@ BitmapFont::BitmapFont()
   RowFactor = 0; ColFactor = 0;
   Base = 0;
   RenderStyle = 0;
-  CurX=CurY=0;
   TexID = 0;
 }
 
@@ -851,8 +896,8 @@ bool BitmapFont::Load(char *fname)
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
   // Stop chararcters from bleeding over edges
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_LINEAR_MIPMAP_LINEAR);
 
   switch(RenderStyle)
    {
@@ -884,8 +929,8 @@ void BitmapFont::Print(char* Text, double x, double y)
   int Row,Col;
   float U,V,U1,V1;
 
-  CurX=x;
-  CurY=y;
+  double CurX=x;
+  double CurY=y;
 
   sLen=(int)strnlen(Text,BFG_MAXSTRING);
 

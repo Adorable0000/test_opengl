@@ -216,7 +216,6 @@ private:
   char Base;
   char Width[256];
   int RenderStyle;
-  double CurX,CurY;
 };
 //
 //----------------------------------------------

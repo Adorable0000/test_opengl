@@ -11,11 +11,12 @@ FT_Library ft;      // test
 
 /*!
  * \brief fragmentShaderSmooth shader source code
+ *
  * Filtering line by adjusting the fragment's alpha
  * value based on the distance to the line.
- * To calculate the fragment's alpha value the
+ * To calculate the fragment's alpha value, the
  * fragment's distance to the line is compared
- * with the current linewidth and apply the power
+ * with the current line width and apply the power
  * function to the normalized difference between
  * those to achieve desired blurriness of the line
  */
@@ -40,6 +41,7 @@ static const char *fragmentShaderSmooth =
 
 /*!
  * \brief vertexShaderSmooth shader source code.
+ *
  * Calculating the distance from a fragment
  * to the line using the interpolated line
  * center point attribute.
@@ -135,10 +137,11 @@ void OpenGLPlot::resizeGL(int width, int height)
   plotHeight = height;
   gridLinesHeight = height;
   gridLinesWidth = width;
-
-//  Keep grid lines sizes divisible by 4 so that
-//  the last line will always touch the higher line
-//  Remember that 1 line need 4 values
+/*
+  Keep grid dotted lines sizes divisible by 4 so that
+  the last dot of line will always touch the higher line
+  Remember that 1 line need 4 values for each dot
+*/
   int mar_h = gridLinesHeight % 4;
   if(mar_h > 0)
     {
@@ -180,14 +183,14 @@ void OpenGLPlot::paintGL()
 //  h1.at(1).resize(2);
 //  h1.at(1).at(1) = 1;
 //  printf("%f\n", h1.at(1).at(1));
-
-/*  if(xbounds < 10)
+/*
+  if(xbounds < 10)
     {
       return;
     }
 
   std::vector<GLdouble> hLine1;
-  hLine1.resize(wlinesize);
+  hLine1.resize(wlinesize);     // Horizontal dotted line
 
   std::vector<GLdouble> hLine2;
   hLine2.resize(wlinesize);
@@ -217,8 +220,8 @@ void OpenGLPlot::paintGL()
 
   for(int i = 0; i < wlinesize; i+=2)
     {
-      hLine1[i] = xlow + i * wpixel;
-      hLine1[i+1] = (yup + ylow)/2;
+      hLine1[i] = xlow + i * wpixel;  // to keep the minium number of X values for line
+      hLine1[i+1] = (yup + ylow)/2;   // Y position of the line
 
       hLine2[i] = xlow + i * wpixel;
       hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
@@ -269,17 +272,19 @@ void OpenGLPlot::paintGL()
   glLoadIdentity();                                               // Clear current render matrix
 
   glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
-/*
+
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
-
+/*
   glColor4f(0,0,0,0.5);
+
+  glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
+  glDrawArrays(GL_LINES, 0, hLine1.size()/2);
 
   glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
   glDrawArrays(GL_LINES, 0, vLine1.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
-  glDrawArrays(GL_LINES, 0, hLine1.size()/2);
+
 
   glVertexPointer(2, GL_DOUBLE, 0, hLine2.data());
   glDrawArrays(GL_LINES, 0, hLine2.size()/2);
@@ -374,11 +379,10 @@ void OpenGLPlot::setXRange(double min, double max)
  * Set color of the graph. Passed parameter can be both
  * OGLColor class or reimplemented color from
  * OGL namespace. If using OGLColor class, you need to
- * call the class constructor OGLColor::OGLColor(),
- * then use OGLColor::setRgbF() and call this function.
+ * call the class constructor OGLColor::OGLColor(), then
+ * use OGLColor::setRgbF() and call this function.
  * Also, you can use this function with OGL namespace
- * color like OGL::(color name).
- * Color name can be:
+ * color like OGL::(color name). Color name can be:
  * black
  * white
  * darkGray

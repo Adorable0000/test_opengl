@@ -170,8 +170,8 @@ private:
 //  QColor penQColor;
   OGLColor penColor;
 
-  int gridLinesWidth;
-  int gridLinesHeight;
+  int gridLinesWidth;   // optimal size of the horizontal dotted lines
+  int gridLinesHeight;  // optimal size of the vertical dotted lines
 
   std::vector<GLdouble> Vertex;
 };

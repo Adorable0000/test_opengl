@@ -1,6 +1,5 @@
 #include "openglplot.h"
 #include <iostream>
-#include <vector>
 
 
 BitmapFont Font;    // test
@@ -52,7 +51,7 @@ static const char *vertexShaderSmooth =
     "#version 200\n"
     "uniform vec2 uViewPort;\n"
     "varying vec2 vLineCenter;\n"
-    "void main(void)\n"
+    "void main()\n"
     "{\n"
     " vec4 pp = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
     " gl_Position = pp;\n"
@@ -61,7 +60,11 @@ static const char *vertexShaderSmooth =
     "}\n";
 
 
+#if defined (QT_CORE_LIB)
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
+#else
+OpenGLPlot::OpenGLPlot()
+#endif
 {
   dataChanged = false;
   showGrid = false;
@@ -95,11 +98,15 @@ OpenGLPlot::~OpenGLPlot()
 
 
 /*!
- * \brief OpenGLPlot::initializeGL
+ * \brief OpenGLPlot::initializeGL OpenGL functions initialization
+ *
+ *
  */
 void OpenGLPlot::initializeGL()
 {
+#if defined (QT_CORE_LIB)
   initializeOpenGLFunctions();
+#endif
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set background color
   glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
@@ -124,9 +131,11 @@ void OpenGLPlot::initializeGL()
 
 
 /*!
- * \brief OpenGLPlot::resizeGL
+ * \brief OpenGLPlot::resizeGL window resize event
  * \param width
  * \param height
+ *
+ *
  */
 void OpenGLPlot::resizeGL(int width, int height)
 {
@@ -155,13 +164,14 @@ void OpenGLPlot::resizeGL(int width, int height)
     }
 
   dataChanged = true;
-  printf("%s\n", glGetString(GL_VERSION));
 }
 
 double wpix;        // test value
 double hpix;        // test value
 /*!
- * \brief OpenGLPlot::paintGL
+ * \brief OpenGLPlot::paintGL main paint event
+ *
+ *
  */
 void OpenGLPlot::paintGL()
 {
@@ -273,6 +283,27 @@ void OpenGLPlot::paintGL()
 
   glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
 
+  //-----------------------------------------------------------------
+  //  TESTING LINE SMOOTHING WITH SHADER
+  //
+  GLuint vertexSmoothShader;
+  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth, NULL);
+  glCompileShader(vertexSmoothShader);
+
+  GLuint fragmentSmoothShader;
+  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth, NULL);
+  glCompileShader(fragmentSmoothShader);
+
+  GLuint shaderProgram;
+  shaderProgram = glCreateProgram();
+  glAttachShader(shaderProgram, vertexSmoothShader);
+  glAttachShader(shaderProgram, fragmentSmoothShader);
+  glLinkProgram(shaderProgram);
+  //
+  //-----------------------------------------------------------------
+
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
 /*
@@ -283,8 +314,6 @@ void OpenGLPlot::paintGL()
 
   glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
   glDrawArrays(GL_LINES, 0, vLine1.size()/2);
-
-
 
   glVertexPointer(2, GL_DOUBLE, 0, hLine2.data());
   glDrawArrays(GL_LINES, 0, hLine2.size()/2);
@@ -303,10 +332,10 @@ void OpenGLPlot::paintGL()
 
   glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
   glDrawArrays(GL_LINES, 0, hLine5.size()/2);
-
+*/
   glEnable(GL_LINE_SMOOTH);
   glEnable(GL_ALPHA_TEST);
-*/
+
   glColor4f(penColor.redF(), penColor.greenF(), penColor.blueF(), penColor.alphaF());   // Set texture color
   glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
@@ -334,6 +363,7 @@ void OpenGLPlot::paintGL()
  * \brief OpenGLPlot::addData
  * \param keys
  * \param values
+ *
  *
  */
 void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
@@ -412,15 +442,6 @@ void OpenGLPlot::setColor(OGLColor col)
 }
 
 
-//void OpenGLPlot::setQColor(QColor col)
-//{
-//  if(penQColor != col)
-//    {
-//      penQColor = col;
-//    }
-//}
-
-
 //---------------------------------------
 // unused for now
 void OpenGLPlot::gridVisible(bool state)
@@ -437,6 +458,7 @@ void OpenGLPlot::axisVisible(bool state)
 //--------------------------------------
 
 
+#if defined(QT_CORE_LIB)
 void OpenGLPlot::mousePressEvent(QMouseEvent *event)
 {
   if(event->button() == Qt::LeftButton)
@@ -489,6 +511,7 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
   this->update();
   event->accept();
 }
+#endif
 
 
 /*!
@@ -582,6 +605,7 @@ OGLColor::OGLColor(OGL::Colors col)
  * \brief OGLColor::OGLColor
  * \param col OGLColor class
  *
+ *
  */
 OGLColor::OGLColor(const OGLColor &col)
 {
@@ -591,6 +615,8 @@ OGLColor::OGLColor(const OGLColor &col)
 
 /*!
  * \brief OGLColor::~OGLColor
+ *
+ *
  */
 OGLColor::~OGLColor()
 {
@@ -626,6 +652,8 @@ void OGLColor::setRgbF(float redF, float greenF, float blueF, float alphaF)
  * \param green
  * \param blue
  * \param alpha
+ *
+ *
  */
 void OGLColor::setRgb(int red, int green, int blue, float alpha)
 {
@@ -692,6 +720,8 @@ float OGLColor::alphaF()
  * \brief OGLColor::operator !=
  * \param col
  * \return bool type enum
+ *
+ *
  */
 bool OGLColor::operator!=(const OGLColor &col) const
 {
@@ -703,6 +733,8 @@ bool OGLColor::operator!=(const OGLColor &col) const
  * \brief OGLColor::operator ==
  * \param col
  * \return
+ *
+ *
  */
 bool OGLColor::operator==(const OGLColor &col) const
 {
@@ -717,6 +749,8 @@ return((rgba.redF == col.rgba.redF) &&
  * \brief OGLColor::operator =
  * \param col
  * \return
+ *
+ *
  */
 OGLColor &OGLColor::operator=(const OGLColor &col)
 {
@@ -729,6 +763,8 @@ OGLColor &OGLColor::operator=(const OGLColor &col)
  * \brief OGLColor::operator =
  * \param col
  * \return
+ *
+ *
  */
 OGLColor &OGLColor::operator=(OGL::Colors col)
 {

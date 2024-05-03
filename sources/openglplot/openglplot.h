@@ -1,21 +1,25 @@
 #ifndef OPENGLPLOT_H
 #define OPENGLPLOT_H
 
+
+#if defined(QT_CORE_LIB)
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 
 #include <QMouseEvent>
 #include <QWheelEvent>
-//#include <QColor>
+#endif
 
+#include <vector>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
 
-//----------------------------------------------
-//  OpenGL colors
-//  used for portability
-//  float type nums
+/*!
+ * Defines preimplemeted colors for painting
+ *
+ * \see OGLColor(OGL::Colors col)
+ */
 namespace OGL {
   enum Colors
   {
@@ -112,7 +116,11 @@ public:
 };
 
 
+#if defined(QT_CORE_LIB)
 class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions
+#else
+class OpenGLPlot
+#endif
 {
   Q_OBJECT
 
@@ -138,9 +146,11 @@ protected:
   void resizeGL(int width, int height) override;
   void paintGL() override;
 
+#if defined(QT_CORE_LIB)
   void wheelEvent(QWheelEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mousePressEvent(QMouseEvent *event) override;
+#endif
 
 private:
 //  void insertColomn(int pos, double min, double max);
@@ -167,11 +177,10 @@ private:
 
   int wheelMove;
 
-//  QColor penQColor;
   OGLColor penColor;
 
-  int gridLinesWidth;   // optimal size of the horizontal dotted lines
-  int gridLinesHeight;  // optimal size of the vertical dotted lines
+  int gridLinesWidth;   /// optimal size of the horizontal dotted lines
+  int gridLinesHeight;  /// optimal size of the vertical dotted lines
 
   std::vector<GLdouble> Vertex;
 };

@@ -3,11 +3,13 @@
 
 
 #if defined(QT_CORE_LIB)
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 
 #include <QMouseEvent>
 #include <QWheelEvent>
+
 #endif
 
 #include <vector>
@@ -76,8 +78,6 @@ public:
 
   struct {float redF; float greenF; float blueF; float alphaF = 1;}rgba;
 };
-//
-//----------------------------------------------
 
 
 class Grid
@@ -86,8 +86,8 @@ public:
   Grid();
   ~Grid();
 
-  void addHorizontalLine(double x, double y);
-  void addWerticalLine(double x, double y);
+  void addHorizontalLine(double xmin, double xmax, double y);
+  void addWerticalLine(double x, double ymin, double ymax);
 
 private:
   std::vector<std::vector<GLdouble>> Elements;
@@ -142,9 +142,15 @@ public:
 //  void addGraph();
 
 protected:
+#if defined(QT_CORE_LIB)
   void initializeGL() override;
   void resizeGL(int width, int height) override;
   void paintGL() override;
+#else
+  void initializeGL();
+  void resizeGL(int width, int height);
+  void paintGL();
+#endif
 
 #if defined(QT_CORE_LIB)
   void wheelEvent(QWheelEvent *event) override;

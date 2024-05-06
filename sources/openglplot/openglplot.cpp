@@ -20,7 +20,7 @@ FT_Library ft;      // test
  * those to achieve desired blurriness of the line
  */
 static const char *fragmentShaderSmooth =
-    "#version 200\n"
+    "#version 120\n"
     "uniform float uLineWidth;\n"
     "uniform vec4 uColor;\n"
     "uniform float uBlendFactor;\n"
@@ -48,7 +48,7 @@ static const char *fragmentShaderSmooth =
  * vertex position to the viewport space
  */
 static const char *vertexShaderSmooth =
-    "#version 200\n"
+    "#version 120\n"
     "uniform vec2 uViewPort;\n"
     "varying vec2 vLineCenter;\n"
     "void main()\n"
@@ -97,6 +97,7 @@ OpenGLPlot::~OpenGLPlot()
 }
 
 
+GLuint VBO;
 /*!
  * \brief OpenGLPlot::initializeGL OpenGL functions initialization
  *
@@ -107,10 +108,11 @@ void OpenGLPlot::initializeGL()
 #if defined (QT_CORE_LIB)
   initializeOpenGLFunctions();
 #endif
-
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set background color
-  glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
-  glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//  glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
+//  glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);             // Set fastest line smoothing
@@ -275,32 +277,55 @@ void OpenGLPlot::paintGL()
 
   glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 //  glOrtho(0,(w),0,(h),-1,1);
-  printf("Width %d\n", plotWidth);
-  printf("Height %d\n", plotHeight);
+//  printf("Width %d\n", plotWidth);
+//  printf("Height %d\n", plotHeight);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
 
-  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
-
   //-----------------------------------------------------------------
   //  TESTING LINE SMOOTHING WITH SHADER
   //
-  GLuint vertexSmoothShader;
-  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth, NULL);
-  glCompileShader(vertexSmoothShader);
+  glBufferData(GL_ARRAY_BUFFER, Vertex.size()*sizeof(double), Vertex.data(), GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-  GLuint fragmentSmoothShader;
-  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth, NULL);
-  glCompileShader(fragmentSmoothShader);
+//  GLuint vertexSmoothShader;
+//  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
+//  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth, NULL);
+//  glCompileShader(vertexSmoothShader);
+//  GLint succ;
+//  GLchar infolog[512];
+//  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
+//  if(!succ)
+//    {
+//      glGetShaderInfoLog(vertexSmoothShader, 256, NULL, infolog);
+//      printf("%s\n", infolog);
+//    }
 
-  GLuint shaderProgram;
-  shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexSmoothShader);
-  glAttachShader(shaderProgram, fragmentSmoothShader);
-  glLinkProgram(shaderProgram);
+//  GLuint fragmentSmoothShader;
+//  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
+//  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth, NULL);
+//  glCompileShader(fragmentSmoothShader);
+//  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
+//  if(!succ)
+//    {
+//      glGetShaderInfoLog(vertexSmoothShader, 256, NULL, infolog);
+//      printf("%s\n", infolog);
+//    }
+
+//  GLuint shaderProgram;
+//  shaderProgram = glCreateProgram();
+//  glAttachShader(shaderProgram, vertexSmoothShader);
+//  glAttachShader(shaderProgram, fragmentSmoothShader);
+//  glLinkProgram(shaderProgram);
+//  glUseProgram(shaderProgram);
+//  printf("create shader program, %d\n", glGetError());
+
+//  glDeleteShader(vertexSmoothShader);
+//  glDeleteShader(fragmentSmoothShader);
+//  glVertexAttribPointer(0, Vertex.size()/2, GL_FLOAT, GL_FALSE, Vertex.size()/2*sizeof(GL_FLOAT), (GLvoid*)0);
+//  glEnableVertexAttribArray(0);
+//  printf("vertex attrib, %d\n", glGetError());
   //
   //-----------------------------------------------------------------
 
@@ -337,10 +362,11 @@ void OpenGLPlot::paintGL()
   glEnable(GL_ALPHA_TEST);
 
   glColor4f(penColor.redF(), penColor.greenF(), penColor.blueF(), penColor.alphaF());   // Set texture color
-  glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
+//  glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
+  glVertexPointer(2, GL_DOUBLE, 0, NULL);
+  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
-
 //--------------------------------------------------------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
@@ -351,10 +377,6 @@ void OpenGLPlot::paintGL()
   glDisable(GL_TEXTURE_2D);
 //
 //--------------------------------------------------------------------------------------------
-
-//  GLint a;
-//  glGetIntegerv(GL_MAX_TEXTURE_SIZE, &a);
-//  printf("%d\n", a);
 
 }
 

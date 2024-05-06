@@ -32,9 +32,12 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   }
 
   QTimer *timer = new QTimer(this);
-//  timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
-//  timer->start(100);
-  timer->singleShot(15,this, &MainWindow::replot);
+  timer->connect(timer, &QTimer::timeout, this, &MainWindow::replot);
+  timer->start(100);
+//  timer->singleShot(15,this, &MainWindow::replot);
+  glplot0->setColor(OGL::blue);
+  glplot0->setYRange(*std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
+  glplot0->setXRange(0, y1.size());
 }
 
 MainWindow::~MainWindow()
@@ -51,9 +54,7 @@ void MainWindow::replot()
 
   glplot0->addData(x1, y1);
 //  glplot0->setColor(Qt::blue);
-  glplot0->setColor(OGL::blue);
-  glplot0->setYRange(*std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
-  glplot0->setXRange(0, y1.size());
+
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();

@@ -18,7 +18,8 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   grid->addWidget(glplot0,0,0,1,1);
 //  grid->addWidget(glplot1,1,0,1,1);
 
-  int size = 20000;
+  //int size = 20000;
+  int size = 100000;
   x1.resize(size);
   y1.resize(size);
   x2.resize(size);
@@ -62,5 +63,5 @@ void MainWindow::replot()
   double time2 = clock() / (double)CLOCKS_PER_SEC;
   double cpu_time = time2 - time1;
 
-  printf("CPU TIME: %.6f sec\n", cpu_time);
+  printf("GPU TIME: %.6f sec\n", cpu_time);
 }

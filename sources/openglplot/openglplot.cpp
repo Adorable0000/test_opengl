@@ -263,6 +263,7 @@ void OpenGLPlot::paintGL()
     if(dataChanged)
     {
       if(Vertex.size() != xbounds*2)  {Vertex.resize(xbounds*2);}
+      if(paintData.xData.size() < Vertex.size()/2) {return;}
       for (int i = 0; i < xbounds*2; i+=2)
         {
           Vertex[i] = paintData.xData[i/2 + xlow];
@@ -288,6 +289,7 @@ void OpenGLPlot::paintGL()
   //
   glBufferData(GL_ARRAY_BUFFER, Vertex.size()*sizeof(double), Vertex.data(), GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
 
 //  GLuint vertexSmoothShader;
 //  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
@@ -375,6 +377,7 @@ void OpenGLPlot::paintGL()
 //  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
   Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*18));     // size of textures is 16 pixels, so we should add 2 pixels
   glDisable(GL_TEXTURE_2D);
+  glFlush();
 //
 //--------------------------------------------------------------------------------------------
 
@@ -494,7 +497,8 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton)
     {
-      mouseMove = (mousePressPos - event->pos().x()) * 4;
+      //mouseMove = (mousePressPos - event->pos().x()) * 4;
+      mouseMove = (mousePressPos - event->pos().x()) * ((sizeRange.xRange.upper - sizeRange.xRange.lower)/5000);
       if((sizeRange.xRange.lower + mouseMove > 0) &&
          (sizeRange.xRange.lower + mouseMove < sizeRange.xRange.upper - 15))
         {
@@ -517,17 +521,18 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 
 void OpenGLPlot::wheelEvent(QWheelEvent *event)
 {
-  if(sizeRange.xRange.lower + event->angleDelta().y() >= sizeRange.xRange.upper - 15 - event->angleDelta().y())
+  int move =  event->angleDelta().y() * ((sizeRange.xRange.upper - sizeRange.xRange.lower)/10000);
+  if(sizeRange.xRange.lower + move >= sizeRange.xRange.upper - 15 - move)
     {
       return;
     }
-  if(sizeRange.xRange.upper - event->angleDelta().y() <= paintData.xData.size())
+  if(sizeRange.xRange.upper - move <= paintData.xData.size())
     {
-      sizeRange.xRange.upper -= event->angleDelta().y();
+      sizeRange.xRange.upper -= move;
     }
-  if(sizeRange.xRange.lower + event->angleDelta().y() > 0)
+  if(sizeRange.xRange.lower + move > 0)
     {
-      sizeRange.xRange.lower += event->angleDelta().y();
+      sizeRange.xRange.lower += move;
     }
   dataChanged = true;
   this->update();

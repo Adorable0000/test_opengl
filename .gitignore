@@ -6,4 +6,4 @@ build*
 
 *.user
 *.txt
-!*CMakeLists.txt
+#!*CMakeLists.txt

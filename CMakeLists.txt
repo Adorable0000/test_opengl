@@ -38,7 +38,7 @@ get_filename_component(PARENT_PATH
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/sources/openglplot)
 
 
-set(CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}/build")
+#set(CMAKE_BINARY_DIR "${CMAKE_BINARY_DIR}/build")
 
 
 #insert your files and directories names here
@@ -81,7 +81,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 
 
-#file(COPY "${PARENT_PATH}/sources/openglplot/DejaVuMathTeXGyre.ttf" DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY "${PARENT_PATH}/sources/openglplot/DejaVuMathTeXGyre.ttf" DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY "${PARENT_PATH}/sources/openglplot/Microsoft_JhengHei_UI_high_res.bff" DESTINATION ${CMAKE_BINARY_DIR})
 
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 target_compile_options(${PROJECT_NAME}_compiler_flags_cxx INTERFACE

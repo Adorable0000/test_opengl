@@ -122,7 +122,7 @@ void OpenGLPlot::initializeGL()
 //----------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
-  if(!Font.Load("/home/smely/test_opengl/sources/openglplot/Microsoft_JhengHei_UI_high_res.bff"))
+  if(!Font.Load("Microsoft_JhengHei_UI_high_res.bff"))
     {
       printf("Can't load\n");
       return;
@@ -823,7 +823,7 @@ void FreeTypeFont::ftInit()
       printf("Error, can't load freetype\n");
       return;
     }
-  if(FT_New_Face(ft, "/usr/share/fonts/truetype/dejavu/DejaVuMathTeXGyre.ttf", 0, &face))
+  if(FT_New_Face(ft, "DejaVuMathTeXGyre.ttf", 0, &face))
     {
       printf("Error, can't load font\n");
       return;

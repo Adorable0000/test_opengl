@@ -88,6 +88,8 @@ public:
 
   void addHorizontalLine(double xmin, double xmax, double y);
   void addWerticalLine(double x, double ymin, double ymax);
+  int gridLinesWidth;   /// optimal size of the horizontal dotted lines
+  int gridLinesHeight;  /// optimal size of the vertical dotted lines
 
 private:
   std::vector<std::vector<GLdouble>> Elements;

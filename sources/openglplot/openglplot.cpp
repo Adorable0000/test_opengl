@@ -333,6 +333,7 @@ void OpenGLPlot::paintGL()
 
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
+  glEnableClientState(GL_VERTEX_ARRAY);
 /*
   glColor4f(0,0,0,0.5);
 
@@ -365,8 +366,7 @@ void OpenGLPlot::paintGL()
 
   glColor4f(penColor.redF(), penColor.greenF(), penColor.blueF(), penColor.alphaF());   // Set texture color
 //  glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
-  glVertexPointer(2, GL_DOUBLE, 0, NULL);
-  glEnableClientState(GL_VERTEX_ARRAY);                           // Enable vertex matrix
+  glVertexPointer(2, GL_DOUBLE, 0, NULL);                          // Enable vertex matrix
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
 //--------------------------------------------------------------------------------------------

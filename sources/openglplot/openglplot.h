@@ -4,11 +4,12 @@
 
 #if defined(QT_CORE_LIB)
 
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions>
+  #include <QOpenGLWidget>
+  #include <QOpenGLFunctions>
+  #include <QOpenGLFunctions_3_1>
 
-#include <QMouseEvent>
-#include <QWheelEvent>
+  #include <QMouseEvent>
+  #include <QWheelEvent>
 
 #endif
 
@@ -86,13 +87,17 @@ public:
   Grid();
   ~Grid();
 
+  void drawGrid();
   void addHorizontalLine(double xmin, double xmax, double y);
   void addWerticalLine(double x, double ymin, double ymax);
-  int gridLinesWidth;   /// optimal size of the horizontal dotted lines
-  int gridLinesHeight;  /// optimal size of the vertical dotted lines
+
+  void setMaxXSize(double width);
+  void setMaxYSize(double height);
 
 private:
-  std::vector<std::vector<GLdouble>> Elements;
+  std::vector<std::vector<GLdouble>> Elements; 
+  int maxXSize;   /// optimal size of the horizontal dotted lines
+  int maxYSize;  /// optimal size of the vertical dotted lines
 };
 
 
@@ -115,11 +120,15 @@ class Axis
 public:
   Axis();
   ~Axis();
+
+  void drawAxis();
+
+  void addLine(double xmin, double xmax, double ymin, double ymax);
+  void addTick(double xmin, double xmax, double ymin, double ymax);
 };
 
-
 #if defined(QT_CORE_LIB)
-class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions
+class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions_3_1
 #else
 class OpenGLPlot
 #endif
@@ -129,10 +138,13 @@ class OpenGLPlot
 public:
   explicit OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
+  float getGLversion();
+  int getGLSLversion();
   void addData(std::vector<double> &keys, std::vector<double> &values);
 
   void setColorf(float red, float green, float blue);
   void setColor(int red, int green, int blue);
+
   void setQColor(QColor col);
   void setColor(OGLColor col);
 
@@ -153,7 +165,7 @@ protected:
   void resizeGL(int width, int height);
   void paintGL();
 #endif
-
+  void vertexChanged(double size, double shift);
 #if defined(QT_CORE_LIB)
   void wheelEvent(QWheelEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
@@ -186,6 +198,7 @@ private:
   int wheelMove;
 
   OGLColor penColor;
+  QColor penQColor;
 
   int gridLinesWidth;   /// optimal size of the horizontal dotted lines
   int gridLinesHeight;  /// optimal size of the vertical dotted lines
@@ -197,8 +210,6 @@ private:
 //----------------------------------------------
 //  TESTING TEXT RENDER USING FREETYPE 2
 //
-#include "ft2build.h"
-#include FT_FREETYPE_H
 
 class FreeTypeFont
 {
@@ -206,7 +217,7 @@ public:
   FreeTypeFont();
   ~FreeTypeFont();
 
-  void ftInit();
+  void ftInit(const char *font_name);
 };
 //
 //----------------------------------------------
@@ -220,8 +231,8 @@ class BitmapFont
 public:
   BitmapFont();
  ~BitmapFont();
-  bool Load(char *fname);
-  void Print(char *Text, double x, double y);
+  bool Load(const char *fname);
+  void Print(const char *Text, double x, double y);
   void Select();
   void Bind();
   void SetBlend();

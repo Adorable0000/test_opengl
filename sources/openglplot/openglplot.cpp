@@ -1,41 +1,16 @@
 #include "openglplot.h"
 #include <iostream>
 
+#include "ft2build.h"
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_BITMAP_H
+
 
 BitmapFont Font;    // test
 FreeTypeFont fr;    // test
 FT_Face face;       // test
 FT_Library ft;      // test
-
-
-/*!
- * \brief fragmentShaderSmooth shader source code
- *
- * Filtering line by adjusting the fragment's alpha
- * value based on the distance to the line.
- * To calculate the fragment's alpha value, the
- * fragment's distance to the line is compared
- * with the current line width and apply the power
- * function to the normalized difference between
- * those to achieve desired blurriness of the line
- */
-static const char *fragmentShaderSmooth =
-    "#version 120\n"
-    "uniform float uLineWidth;\n"
-    "uniform vec4 uColor;\n"
-    "uniform float uBlendFactor;\n"
-    "varying vec2 vLineCenter;\n"
-    "void main(void)\n"
-    "{\n"
-    " vec4 col = uColor;\n"
-    " double d = length(vLineCenter-gl_FragCoord.xy);\n"
-    " double w = uLineWidth;\n"
-    " if (d>w)\n"
-    "   col.w = 0;\n"
-    " else\n"
-    "   col.w *= pow(float((w-d)/w), uBlendFactor);\n"
-    " gl_FragColor = col;"
-    "}\n";
 
 
 /*!
@@ -60,13 +35,45 @@ static const char *vertexShaderSmooth =
     "}\n";
 
 
+/*!
+ * \brief fragmentShaderSmooth shader source code
+ *
+ * Filtering line by adjusting the fragment's alpha
+ * value based on the distance to the line.
+ * To calculate the fragment's alpha value, the
+ * fragment's distance to the line is compared
+ * with the current line width and apply the power
+ * function to the normalized difference between
+ * those to achieve desired blurriness of the line
+ */
+static const char *fragmentShaderSmooth =
+    "#version 120\n"
+    "uniform float uLineWidth;\n"
+    "uniform vec4 uColor;\n"
+    "uniform float uBlendFactor;\n"
+    "varying vec2 vLineCenter;\n"
+    "void main(void)\n"
+    "{\n"
+    " vec4 col = uColor;\n"
+    " double d = length(vLineCenter-gl_FragCoord.xy);\n"
+    " double w = uLineWidth;\n"
+    " if (d>w){\n"
+    "   col.w = 0;\n"
+    " }\n"
+    " else{\n"
+    "   col.w *= pow(float((w-d)/w), uBlendFactor);\n"
+    " }\n"
+    " gl_FragColor = col;"
+    "}\n";
+
+
 #if defined (QT_CORE_LIB)
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 #else
 OpenGLPlot::OpenGLPlot()
 #endif
 {
-  dataChanged = false;
+  //dataChanged = false;
   showGrid = false;
   showAxis = false;
   sizeRange.xRange.lower = 0;
@@ -77,12 +84,6 @@ OpenGLPlot::OpenGLPlot()
   paintData.yData.resize(15);
   mouseMove = 0;
   mousePressPos = 0;
-
-//----------------------------------------------
-//  TESTING TEXT RENDER USING FREETYPE 2
-  fr.ftInit();
-//
-//----------------------------------------------
 }
 
 
@@ -99,15 +100,24 @@ OpenGLPlot::~OpenGLPlot()
 
 GLuint VBO;
 /*!
- * \brief OpenGLPlot::initializeGL OpenGL functions initialization
+ * \brief OpenGLPlot::initializeGL Initializing OpenGL functions.
  *
- *
+ * Gets called once before the first time
+ * resizeGL() or paintGL() is called
+ * When using Qt, it is virtual function which is
+ * called during creating widget
+ * All used vertex and array (if supported) buffer
+ * objects should be created and binded there, also
+ * sets up the OpenGL resources and state
  */
 void OpenGLPlot::initializeGL()
 {
 #if defined (QT_CORE_LIB)
   initializeOpenGLFunctions();
 #endif
+  float version = getGLversion();;
+  printf("%f\n", version);
+
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set background color
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -122,28 +132,42 @@ void OpenGLPlot::initializeGL()
 //----------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
-  if(!Font.Load("Microsoft_JhengHei_UI_high_res.bff"))
+  std::string font_name = "Microsoft_JhengHei_UI_high_res.bff";
+  if(!Font.Load(font_name.c_str()))
     {
       printf("Can't load\n");
       return;
     }
 //
 //----------------------------------------------
+
+
+//----------------------------------------------
+//  TESTING TEXT RENDER USING FREETYPE 2
+  fr.ftInit("DejaVuMathTeXGyre.ttf");
+//
+//----------------------------------------------
 }
 
 
 /*!
- * \brief OpenGLPlot::resizeGL window resize event
+ * \brief OpenGLPlot::resizeGL Main resize event.
  * \param width
  * \param height
  *
- *
+ * Gets called whenever the widget has been resized
+ * and also when it is shown for the first time
+ * because all newly created widgets should be
+ * resized. When using Qt, widget get a resize event
+ * automatically.
+ * Sets up the OpenGL viewport and projection,
+ * clear current matrix when called
  */
 void OpenGLPlot::resizeGL(int width, int height)
 {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
-  glViewport(0, 0, (GLint)width, (GLint)height);    // Change size of render window
+  glViewport(0, 0, reinterpret_cast<GLint>(width), reinterpret_cast<GLint>(height));    // Change size of render window
   plotWidth = width;
   plotHeight = height;
   gridLinesHeight = height;
@@ -165,15 +189,19 @@ void OpenGLPlot::resizeGL(int width, int height)
       gridLinesWidth += (4-mar_w);
     }
 
-  dataChanged = true;
+  //dataChanged = true;
 }
 
 double wpix;        // test value
 double hpix;        // test value
 /*!
- * \brief OpenGLPlot::paintGL main paint event
+ * \brief OpenGLPlot::paintGL Main paint event
  *
- *
+ * Renders the OpenGL scene. Gets called
+ * whenever the widget needs to be updated.
+ * When using Qt, this is a virtual function
+ * that gets called everytime you call
+ * (widget name).update()
  */
 void OpenGLPlot::paintGL()
 {
@@ -190,11 +218,6 @@ void OpenGLPlot::paintGL()
   wpix = xbounds/plotWidth;  // test value
   hpix = ybounds/plotHeight;  // test value
 
-//  std::vector<std::vector<GLdouble>> h1;
-//  h1.resize(2);
-//  h1.at(1).resize(2);
-//  h1.at(1).at(1) = 1;
-//  printf("%f\n", h1.at(1).at(1));
 /*
   if(xbounds < 10)
     {
@@ -262,20 +285,13 @@ void OpenGLPlot::paintGL()
 
     if(dataChanged)
     {
-      if(Vertex.size() != xbounds*2)  {Vertex.resize(xbounds*2);}
-      if(paintData.xData.size() < Vertex.size()/2) {return;}
-      for (int i = 0; i < xbounds*2; i+=2)
-        {
-          Vertex[i] = paintData.xData[i/2 + xlow];
-          Vertex[i+1] = paintData.yData[i/2 + xlow];
-        }
+      vertexChanged(xbounds, xlow);
       dataChanged = false;
     }
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-
   glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 //  glOrtho(0,(w),0,(h),-1,1);
 //  printf("Width %d\n", plotWidth);
@@ -284,56 +300,56 @@ void OpenGLPlot::paintGL()
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
 
-  //-----------------------------------------------------------------
-  //  TESTING LINE SMOOTHING WITH SHADER
-  //
   glBufferData(GL_ARRAY_BUFFER, Vertex.size()*sizeof(double), Vertex.data(), GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+  //-----------------------------------------------------------------
+  //  TESTING LINE SMOOTHING WITH SHADER
+  //
+  GLuint vertexSmoothShader;
+  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth, NULL);
+  glCompileShader(vertexSmoothShader);
+  GLint succ;
+  GLchar infolog[512];
+  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
+  if(!succ)
+    {
+      glGetShaderInfoLog(vertexSmoothShader, 512, NULL, infolog);
+      printf("vertex shader, %s\n", infolog);
+    }
 
-//  GLuint vertexSmoothShader;
-//  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
-//  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth, NULL);
-//  glCompileShader(vertexSmoothShader);
-//  GLint succ;
-//  GLchar infolog[512];
-//  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
-//  if(!succ)
-//    {
-//      glGetShaderInfoLog(vertexSmoothShader, 256, NULL, infolog);
-//      printf("%s\n", infolog);
-//    }
+  GLuint fragmentSmoothShader;
+  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth, NULL);
+  glCompileShader(fragmentSmoothShader);
+  glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &succ);
+  if(!succ)
+    {
+      glGetShaderInfoLog(fragmentSmoothShader, 512, NULL, infolog);
+      printf("fragment shader, %s\n", infolog);
+    }
 
-//  GLuint fragmentSmoothShader;
-//  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
-//  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth, NULL);
-//  glCompileShader(fragmentSmoothShader);
-//  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
-//  if(!succ)
-//    {
-//      glGetShaderInfoLog(vertexSmoothShader, 256, NULL, infolog);
-//      printf("%s\n", infolog);
-//    }
+  GLuint shaderProgram;
+  shaderProgram = glCreateProgram();
+  glAttachShader(shaderProgram, vertexSmoothShader);
+  glAttachShader(shaderProgram, fragmentSmoothShader);
+  glLinkProgram(shaderProgram);
+  glUseProgram(shaderProgram);
+  printf("create shader program, %d\n", glGetError());
 
-//  GLuint shaderProgram;
-//  shaderProgram = glCreateProgram();
-//  glAttachShader(shaderProgram, vertexSmoothShader);
-//  glAttachShader(shaderProgram, fragmentSmoothShader);
-//  glLinkProgram(shaderProgram);
-//  glUseProgram(shaderProgram);
-//  printf("create shader program, %d\n", glGetError());
-
-//  glDeleteShader(vertexSmoothShader);
-//  glDeleteShader(fragmentSmoothShader);
-//  glVertexAttribPointer(0, Vertex.size()/2, GL_FLOAT, GL_FALSE, Vertex.size()/2*sizeof(GL_FLOAT), (GLvoid*)0);
-//  glEnableVertexAttribArray(0);
-//  printf("vertex attrib, %d\n", glGetError());
+  glDeleteShader(vertexSmoothShader);
+  glDeleteShader(fragmentSmoothShader);
+  glVertexAttribPointer(0, Vertex.size()/2, GL_FLOAT, GL_FALSE, Vertex.size()/2*sizeof(GL_FLOAT), (GLvoid*)0);
+  glEnableVertexAttribArray(0);
+  printf("vertex attrib, %d\n", glGetError());
   //
   //-----------------------------------------------------------------
 
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
   glEnableClientState(GL_VERTEX_ARRAY);
+
 /*
   glColor4f(0,0,0,0.5);
 
@@ -380,6 +396,34 @@ void OpenGLPlot::paintGL()
   glFlush();
 //
 //--------------------------------------------------------------------------------------------
+
+}
+
+
+void OpenGLPlot::vertexChanged(double size, double shift)
+{
+  if(Vertex.size() != size*2)  {Vertex.resize(size*2);}
+  if(paintData.xData.size() < Vertex.size()/2) {return;}
+  for (int i = 0; i < size*2; i+=2)
+    {
+      Vertex[i] = paintData.xData[i/2 + shift];
+      Vertex[i+1] = paintData.yData[i/2 + shift];
+    }
+}
+
+
+float OpenGLPlot::getGLversion()
+{
+  GLfloat majver = 0;
+  GLfloat minver = 0;
+  glGetFloatv(GL_MAJOR_VERSION, &majver);
+  glGetFloatv(GL_MINOR_VERSION, &minver);
+  return majver + (minver/10);
+}
+
+
+int OpenGLPlot::getGLSLversion()
+{
 
 }
 
@@ -463,6 +507,15 @@ void OpenGLPlot::setColor(OGLColor col)
   if(penColor != col)
     {
       penColor = col;
+    }
+}
+
+
+void OpenGLPlot::setQColor(QColor col)
+{
+  if(penQColor != col)
+    {
+      penQColor = col;
     }
 }
 
@@ -797,8 +850,7 @@ OGLColor &OGLColor::operator=(OGL::Colors col)
 {
   return operator=(OGLColor(col));
 }
-//
-//---------------------------------------
+
 
 
 //----------------------------------------------
@@ -816,14 +868,14 @@ FreeTypeFont::~FreeTypeFont()
 }
 
 
-void FreeTypeFont::ftInit()
+void FreeTypeFont::ftInit(const char *font_name)
 {
   if(FT_Init_FreeType(&ft))
     {
       printf("Error, can't load freetype\n");
       return;
     }
-  if(FT_New_Face(ft, "DejaVuMathTeXGyre.ttf", 0, &face))
+  if(FT_New_Face(ft, /*"DejaVuMathTeXGyre.ttf"*/ font_name, 0, &face))
     {
       printf("Error, can't load font\n");
       return;
@@ -870,7 +922,7 @@ BitmapFont::~BitmapFont()
 #define BFG_RS_ALPHA 0x1
 #define BFG_RS_RGB   0x2
 #define BFG_RS_RGBA  0x4
-bool BitmapFont::Load(char *fname)
+bool BitmapFont::Load(const char *fname)
 {
   char *dat, *img;
   std::fstream in;
@@ -904,7 +956,7 @@ bool BitmapFont::Load(char *fname)
     }
   in.close();
 
-  if((unsigned char)dat[0] != 0xBF || (unsigned char)dat[1] != 0xF2)
+  if(static_cast<unsigned char>(dat[0]) != 0xBF || static_cast<unsigned char>(dat[1]) != 0xF2)
     {
       delete [] dat;
       return false;
@@ -920,8 +972,8 @@ bool BitmapFont::Load(char *fname)
           return false;
 
   RowPitch=ImgX/CellX;
-  ColFactor=(float)CellX/(float)ImgX;
-  RowFactor=(float)CellY/(float)ImgY;
+  ColFactor=static_cast<float>(CellX)/static_cast<float>(ImgX);
+  RowFactor=static_cast<float>(CellY)/static_cast<float>(ImgY);
   YOffset=CellY;
 
   // Determine blending options based on BPP
@@ -990,7 +1042,7 @@ bool BitmapFont::Load(char *fname)
 
 
 // Prints text at a specifed position, again cursor is updated
-void BitmapFont::Print(char* Text, double x, double y)
+void BitmapFont::Print(const char* Text, double x, double y)
  {
   int sLen,Loop;
   int Row,Col;
@@ -999,7 +1051,7 @@ void BitmapFont::Print(char* Text, double x, double y)
   double CurX=x;
   double CurY=y;
 
-  sLen=(int)strnlen(Text,BFG_MAXSTRING);
+  sLen=static_cast<int>(strnlen(Text,BFG_MAXSTRING));
 
   glBegin(GL_QUADS);
   int divider = 16;   // to reduce size of texture to 16 pixels, current texture size is 256

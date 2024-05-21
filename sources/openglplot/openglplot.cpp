@@ -22,7 +22,7 @@ FT_Library ft;      // test
  * Vertex transforming the normalized projected
  * vertex position to the viewport space
  */
-static const char *vertexShaderSmooth =
+static const char *vertexShaderSmooth_120 =
     "#version 120\n"
     "uniform vec2 uViewPort;\n"
     "varying vec2 vLineCenter;\n"
@@ -46,7 +46,7 @@ static const char *vertexShaderSmooth =
  * function to the normalized difference between
  * those to achieve desired blurriness of the line
  */
-static const char *fragmentShaderSmooth =
+static const char *fragmentShaderSmooth_120 =
     "#version 120\n"
     "uniform float uLineWidth;\n"
     "uniform vec4 uColor;\n"
@@ -308,7 +308,7 @@ void OpenGLPlot::paintGL()
   //
   GLuint vertexSmoothShader;
   vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth, NULL);
+  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth_120, NULL);
   glCompileShader(vertexSmoothShader);
   GLint succ;
   GLchar infolog[512];
@@ -321,7 +321,7 @@ void OpenGLPlot::paintGL()
 
   GLuint fragmentSmoothShader;
   fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth, NULL);
+  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth_120, NULL);
   glCompileShader(fragmentSmoothShader);
   glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &succ);
   if(!succ)

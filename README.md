@@ -65,6 +65,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE openglplot)
 And, please, copy font file to your build directory, for example
 
 ```CMake
+get_filename_component(PARENT_PATH
+                       "${CMAKE_CURRENT_LIST_DIR}"
+                       ABSOLUTE
+)
 file(COPY "${PARENT_PATH}/sources/openglplot/DejaVuMathTeXGyre.ttf" DESTINATION ${CMAKE_BINARY_DIR})
 ```
 

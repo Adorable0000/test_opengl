@@ -130,19 +130,6 @@ void OpenGLPlot::initializeGL()
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
 
 //----------------------------------------------
-//  TESTING TEXT RENDER USING BITMAP
-//
-  std::string font_name = "Microsoft_JhengHei_UI_high_res.bff";
-  if(!Font.Load(font_name.c_str()))
-    {
-      printf("Can't load\n");
-      return;
-    }
-//
-//----------------------------------------------
-
-
-//----------------------------------------------
 //  TESTING TEXT RENDER USING FREETYPE 2
   fr.ftInit("DejaVuMathTeXGyre.ttf");
 //
@@ -205,6 +192,8 @@ double hpix;        // test value
  */
 void OpenGLPlot::paintGL()
 {
+  double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+
   double xlow = sizeRange.xRange.lower;
   double xup = sizeRange.xRange.upper;
   double xbounds = xup - xlow;
@@ -283,19 +272,17 @@ void OpenGLPlot::paintGL()
   vLine2[3] = yup;
 */
 
-    if(dataChanged)
-    {
-      vertexChanged(xbounds, xlow);
-      dataChanged = false;
-    }
+//    if(dataChanged)
+//    {
+//      vertexChanged(xbounds, xlow);
+//      dataChanged = false;
+//    }
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
-//  glOrtho(0,(w),0,(h),-1,1);
-//  printf("Width %d\n", plotWidth);
-//  printf("Height %d\n", plotHeight);
+//  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
@@ -306,43 +293,43 @@ void OpenGLPlot::paintGL()
   //-----------------------------------------------------------------
   //  TESTING LINE SMOOTHING WITH SHADER
   //
-  GLuint vertexSmoothShader;
-  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth_120, NULL);
-  glCompileShader(vertexSmoothShader);
-  GLint succ;
-  GLchar infolog[512];
-  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
-  if(!succ)
-    {
-      glGetShaderInfoLog(vertexSmoothShader, 512, NULL, infolog);
-      printf("vertex shader, %s\n", infolog);
-    }
+//  GLuint vertexSmoothShader;
+//  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
+//  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth_120, NULL);
+//  glCompileShader(vertexSmoothShader);
+//  GLint succ;
+//  GLchar infolog[512];
+//  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
+//  if(!succ)
+//    {
+//      glGetShaderInfoLog(vertexSmoothShader, 512, NULL, infolog);
+//      printf("vertex shader, %s\n", infolog);
+//    }
 
-  GLuint fragmentSmoothShader;
-  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth_120, NULL);
-  glCompileShader(fragmentSmoothShader);
-  glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &succ);
-  if(!succ)
-    {
-      glGetShaderInfoLog(fragmentSmoothShader, 512, NULL, infolog);
-      printf("fragment shader, %s\n", infolog);
-    }
+//  GLuint fragmentSmoothShader;
+//  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
+//  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth_120, NULL);
+//  glCompileShader(fragmentSmoothShader);
+//  glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &succ);
+//  if(!succ)
+//    {
+//      glGetShaderInfoLog(fragmentSmoothShader, 512, NULL, infolog);
+//      printf("fragment shader, %s\n", infolog);
+//    }
 
-  GLuint shaderProgram;
-  shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexSmoothShader);
-  glAttachShader(shaderProgram, fragmentSmoothShader);
-  glLinkProgram(shaderProgram);
-  glUseProgram(shaderProgram);
-  printf("create shader program, %d\n", glGetError());
+//  GLuint shaderProgram;
+//  shaderProgram = glCreateProgram();
+//  glAttachShader(shaderProgram, vertexSmoothShader);
+//  glAttachShader(shaderProgram, fragmentSmoothShader);
+//  glLinkProgram(shaderProgram);
+//  glUseProgram(shaderProgram);
+//  printf("create shader program, %d\n", glGetError());
 
-  glDeleteShader(vertexSmoothShader);
-  glDeleteShader(fragmentSmoothShader);
-  glVertexAttribPointer(0, Vertex.size()/2, GL_FLOAT, GL_FALSE, Vertex.size()/2*sizeof(GL_FLOAT), (GLvoid*)0);
-  glEnableVertexAttribArray(0);
-  printf("vertex attrib, %d\n", glGetError());
+//  glDeleteShader(vertexSmoothShader);
+//  glDeleteShader(fragmentSmoothShader);
+//  glVertexAttribPointer(0, Vertex.size()/2, GL_FLOAT, GL_FALSE, Vertex.size()/2*sizeof(GL_FLOAT), (GLvoid*)0);
+//  glEnableVertexAttribArray(0);
+//  printf("vertex attrib, %d\n", glGetError());
   //
   //-----------------------------------------------------------------
 
@@ -388,15 +375,18 @@ void OpenGLPlot::paintGL()
 //--------------------------------------------------------------------------------------------
 //  TESTING TEXT RENDER USING BITMAP
 //
-  glEnable(GL_TEXTURE_2D);
-  Font.Select();
+//  glEnable(GL_TEXTURE_2D);
+//  Font.Select();
 //  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
-  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*18));     // size of textures is 16 pixels, so we should add 2 pixels
-  glDisable(GL_TEXTURE_2D);
-  glFlush();
+//  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*18));     // size of textures is 16 pixels, so we should add 2 pixels
+//  glDisable(GL_TEXTURE_2D);
+//  glFlush();
 //
 //--------------------------------------------------------------------------------------------
+  double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+  double gpu_time = time2 - time1;
 
+  printf("GPU TIME: %.6f sec\n", gpu_time);
 }
 
 
@@ -404,10 +394,17 @@ void OpenGLPlot::vertexChanged(double size, double shift)
 {
   if(Vertex.size() != size*2)  {Vertex.resize(size*2);}
   if(paintData.xData.size() < Vertex.size()/2) {return;}
+  float strideY = (sizeRange.yRange.upper + sizeRange.yRange.lower) * 0.5;
+  float diffY = (sizeRange.yRange.upper - sizeRange.yRange.lower) * 0.5;
+  float strideX = (sizeRange.xRange.upper + sizeRange.xRange.lower) * 0.5;
+  float diffX = (sizeRange.xRange.upper - sizeRange.xRange.lower) * 0.5;
+  float downScale = strideX/diffX;
   for (int i = 0; i < size*2; i+=2)
     {
-      Vertex[i] = paintData.xData[i/2 + shift];
-      Vertex[i+1] = paintData.yData[i/2 + shift];
+//      Vertex[i] = paintData.xData[i/2 + shift];
+//      Vertex[i+1] = paintData.yData[i/2 + shift];
+      Vertex[i] = ((paintData.xData[i/2 + shift]/diffX) - downScale) * 0.96;
+      Vertex[i+1] = ((paintData.yData[i/2 + shift] - strideY)/diffY) * 0.96;
     }
 }
 
@@ -441,9 +438,6 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
     {
       return;
     }
-
-  paintData.xData.clear();
-  paintData.yData.clear();
   if((paintData.xData.size() != keys.size()) || (paintData.yData.size() != values.size()))
     {
       paintData.xData.resize(keys.size());
@@ -452,7 +446,7 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
 
   memmove(paintData.xData.data(), keys.data(), keys.size() * sizeof (double));
   memmove(paintData.yData.data(), values.data(), values.size() * sizeof (double));
-  dataChanged = true;
+  vertexChanged(paintData.xData.size(), 0);
 }
 
 
@@ -550,20 +544,19 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
 {
   if (event->buttons() & Qt::LeftButton)
     {
-      //mouseMove = (mousePressPos - event->pos().x()) * 4;
       mouseMove = (mousePressPos - event->pos().x()) * ((sizeRange.xRange.upper - sizeRange.xRange.lower)/5000);
       if((sizeRange.xRange.lower + mouseMove > 0) &&
          (sizeRange.xRange.lower + mouseMove < sizeRange.xRange.upper - 15))
         {
           sizeRange.xRange.lower += mouseMove;
-          dataChanged = true;
+          vertexChanged(sizeRange.xRange.upper - sizeRange.xRange.lower, sizeRange.xRange.lower);
           this->update();
         }
       if((sizeRange.xRange.upper + mouseMove < paintData.xData.size()) &&
          (sizeRange.xRange.upper + mouseMove > sizeRange.xRange.lower + 15))
         {
           sizeRange.xRange.upper += mouseMove;
-          dataChanged = true;
+          vertexChanged(sizeRange.xRange.upper - sizeRange.xRange.lower, sizeRange.xRange.lower);
           this->update();
         }
       mousePressPos = event->pos().x();
@@ -587,7 +580,7 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
     {
       sizeRange.xRange.lower += move;
     }
-  dataChanged = true;
+  vertexChanged(sizeRange.xRange.upper - sizeRange.xRange.lower, sizeRange.xRange.lower);
   this->update();
   event->accept();
 }
@@ -894,233 +887,3 @@ void FreeTypeFont::ftInit(const char *font_name)
 
 //
 //----------------------------------------------
-
-
-//----------------------------------------------
-//  TESTING TEXT RENDER USING BITMAP
-//
-BitmapFont::BitmapFont()
-{
-  CellX = 0; CellY = 0; YOffset = 0; RowPitch = 0;
-  RowFactor = 0; ColFactor = 0;
-  Base = 0;
-  RenderStyle = 0;
-  TexID = 0;
-}
-
-BitmapFont::~BitmapFont()
-{
-
-}
-
-
-#include <fstream>
-#define WIDTH_DATA_OFFSET  20 // Offset to width data with BFF file
-#define MAP_DATA_OFFSET   276 // Offset to texture image data with BFF file
-#define BFG_MAXSTRING 255     // Maximum string length
-#define BFG_RS_NONE  0x0      // Blend flags
-#define BFG_RS_ALPHA 0x1
-#define BFG_RS_RGB   0x2
-#define BFG_RS_RGBA  0x4
-bool BitmapFont::Load(const char *fname)
-{
-  char *dat, *img;
-  std::fstream in;
-  unsigned long fileSize;
-  char bpp;
-  int ImgX, ImgY;
-
-  in.open(fname, std::ios_base::binary | std::ios_base::in);
-
-  if(in.fail())
-    {
-      return false;
-    }
-
-  in.seekg(0, std::ios_base::end);
-  fileSize = in.tellg();
-  in.seekg(0, std::ios_base::beg);
-
-  dat = new char[fileSize];
-  if(!dat)
-    {
-      return false;
-    }
-
-  in.read(dat,fileSize);
-  if(in.fail())
-    {
-      delete [] dat;
-      in.close();
-      return false;
-    }
-  in.close();
-
-  if(static_cast<unsigned char>(dat[0]) != 0xBF || static_cast<unsigned char>(dat[1]) != 0xF2)
-    {
-      delete [] dat;
-      return false;
-    }
-  memcpy(&ImgX,&dat[2],sizeof(int));
-  memcpy(&ImgY,&dat[6],sizeof(int));
-  memcpy(&CellX,&dat[10],sizeof(int));
-  memcpy(&CellY,&dat[14],sizeof(int));
-  bpp=dat[18];
-  Base=dat[19];
-
-  if(fileSize != ((MAP_DATA_OFFSET)+((ImgX*ImgY)*(bpp/8))))
-          return false;
-
-  RowPitch=ImgX/CellX;
-  ColFactor=static_cast<float>(CellX)/static_cast<float>(ImgX);
-  RowFactor=static_cast<float>(CellY)/static_cast<float>(ImgY);
-  YOffset=CellY;
-
-  // Determine blending options based on BPP
-   switch(bpp)
-    {
-     case 8: // Greyscale
-      RenderStyle=BFG_RS_ALPHA;
-      break;
-
-     case 24: // RGB
-      RenderStyle=BFG_RS_RGB;
-      break;
-
-     case 32: // RGBA
-      RenderStyle=BFG_RS_RGBA;
-      break;
-
-     default: // Unsupported BPP
-      delete [] dat;
-      return false;
-      break;
-    }
-
-  img=new char[(ImgX*ImgY)*(bpp/8)];
-  if(!img)
-   {
-    delete [] dat;
-    return false;
-   }
-
-  // Grab char widths
-  memcpy(Width,&dat[WIDTH_DATA_OFFSET],256);
-  // Grab image data
-  memcpy(img,&dat[MAP_DATA_OFFSET],(ImgX*ImgY)*(bpp/8));
-  // Create Texture
-  glGenTextures(1,&TexID);
-  glBindTexture(GL_TEXTURE_2D,TexID);
-  // Fonts should be rendered at native resolution so no need for texture filtering
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-  // Stop chararcters from bleeding over edges
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_LINEAR_MIPMAP_LINEAR);
-
-  switch(RenderStyle)
-   {
-    case BFG_RS_ALPHA:
-     glTexImage2D(GL_TEXTURE_2D,0,GL_LUMINANCE,ImgX,ImgY,0,GL_LUMINANCE,GL_UNSIGNED_BYTE,img);
-     break;
-
-    case BFG_RS_RGB:
-     glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,ImgX,ImgY,0,GL_RGB,GL_UNSIGNED_BYTE,img);
-     break;
-
-    case BFG_RS_RGBA:
-     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,ImgX,ImgY,0,GL_RGBA,GL_UNSIGNED_BYTE,img);
-     break;
-   }
-
-  // Clean up
-  delete [] img;
-  delete [] dat;
-
-  return true;
-}
-
-
-// Prints text at a specifed position, again cursor is updated
-void BitmapFont::Print(const char* Text, double x, double y)
- {
-  int sLen,Loop;
-  int Row,Col;
-  float U,V,U1,V1;
-
-  double CurX=x;
-  double CurY=y;
-
-  sLen=static_cast<int>(strnlen(Text,BFG_MAXSTRING));
-
-  glBegin(GL_QUADS);
-  int divider = 16;   // to reduce size of texture to 16 pixels, current texture size is 256
-  for(Loop=0;Loop!=sLen;++Loop)
-   {
-    Row=(Text[Loop]-Base)/RowPitch;
-    Col=(Text[Loop]-Base)-Row*RowPitch;
-
-    U=Col*ColFactor;
-    V=Row*RowFactor;
-    U1=U+ColFactor;
-    V1=V+RowFactor;
-
-//     glTexCoord2f(U, V1); glVertex2i(CurX,      CurY);
-//     glTexCoord2f(U1,V1); glVertex2i((CurX+CellX), CurY);
-//     glTexCoord2f(U1,V ); glVertex2i((CurX+CellX), (CurY+CellY));
-//     glTexCoord2f(U, V ); glVertex2i(CurX,      (CurY+CellY));
-
-    glTexCoord2f(U, V1); glVertex2f( (CurX/divider * wpix) , ((CurY)/divider * hpix)+CurY);
-    glTexCoord2f(U1,V1); glVertex2f( ((CurX + CellX)/divider * wpix), (CurY/divider * hpix)+CurY);
-    glTexCoord2f(U1,V ); glVertex2f( ((CurX + CellX)/divider * wpix), ((CurY + CellY)/divider * hpix)+CurY );
-    glTexCoord2f(U, V ); glVertex2f( (CurX/divider * wpix), ((CurY + CellY)/divider * hpix)+CurY );
-    CurX+=(Width[Text[Loop]]);
-   }
-  glEnd();
- }
-
-
-void BitmapFont::Select()
- {
-  Bind();
-  glColor3f(0,0,0);
-  SetBlend();
- }
-
-void BitmapFont::Bind()
- {
-  glBindTexture(GL_TEXTURE_2D,TexID);
- }
-
-void BitmapFont::SetBlend()
- {
-  switch(RenderStyle)
-   {
-    case BFG_RS_ALPHA: // 8Bit
-     glBlendFunc(GL_SRC_ALPHA,GL_SRC_ALPHA);
-     glEnable(GL_BLEND);
-     break;
-
-    case BFG_RS_RGB:   // 24Bit
-     glDisable(GL_BLEND);
-     break;
-
-    case BFG_RS_RGBA:  // 32Bit
-     glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-     glEnable(GL_BLEND);
-     break;
-   }
- }
-//
-//----------------------------------------------
-
-#if defined (__linux__)
-#include <unistd.h>
-#elif (WIN32)
-#include <direct.h>
-#endif
-std::string get_working_path()
-{
-  char dir[256];
-  return(getcwd(dir, 256) ? std::string(dir) : std::string(""));
-}

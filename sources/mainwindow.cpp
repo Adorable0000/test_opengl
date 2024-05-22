@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 //  grid->addWidget(glplot1,1,0,1,1);
 
   //int size = 20000;
-  int size = 100000;
+  int size = 20000;
   x1.resize(size);
   y1.resize(size);
   x2.resize(size);
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   for(int i = 0; i < size; i++)
   {
     x1[i] = i;
-    y1[i] = (sin(2 * 3.14 * i)/* * (1 << 11)) + (1 << 11*/);
+    y1[i] = (sin(2 * 3.14 * i) /* (1 << 11)) + (1 << 11*/) ;
     x2[i] = i;
     y2[i] = (cos(2 * 3.14 * i) * (1 << 11)) + (1 << 11);
   }
@@ -37,8 +37,10 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   timer->start(100);
 //  timer->singleShot(15,this, &MainWindow::replot);
   glplot0->setColor(OGL::blue);
+  //  glplot0->setColor(Qt::blue);
   glplot0->setYRange(*std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
   glplot0->setXRange(0, y1.size());
+  glplot0->addData(x1, y1);
 }
 
 MainWindow::~MainWindow()
@@ -51,17 +53,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::replot()
 {
-  double time1 = clock() / (double)CLOCKS_PER_SEC;
+//  double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
 
-  glplot0->addData(x1, y1);
-//  glplot0->setColor(Qt::blue);
+//  glplot0->addData(x1, y1);
 
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();
 
-  double time2 = clock() / (double)CLOCKS_PER_SEC;
-  double cpu_time = time2 - time1;
+//  double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+//  double cpu_time = time2 - time1;
 
-  printf("GPU TIME: %.6f sec\n", cpu_time);
+//  printf("GPU TIME: %.6f sec\n", cpu_time);
 }

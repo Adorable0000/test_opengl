@@ -2,16 +2,13 @@
 #define OPENGLPLOT_H
 
 
-#if defined(QT_CORE_LIB)
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_1>
 
-  #include <QOpenGLWidget>
-  #include <QOpenGLFunctions>
-  #include <QOpenGLFunctions_3_1>
+#include <QMouseEvent>
+#include <QWheelEvent>
 
-  #include <QMouseEvent>
-  #include <QWheelEvent>
-
-#endif
 
 #include <vector>
 #include <GL/gl.h>
@@ -127,11 +124,9 @@ public:
   void addTick(double xmin, double xmax, double ymin, double ymax);
 };
 
-#if defined(QT_CORE_LIB)
+
 class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions_3_1
-#else
-class OpenGLPlot
-#endif
+
 {
   Q_OBJECT
 
@@ -156,21 +151,17 @@ public:
 //  void addGraph();
 
 protected:
-#if defined(QT_CORE_LIB)
+
   void initializeGL() override;
   void resizeGL(int width, int height) override;
   void paintGL() override;
-#else
-  void initializeGL();
-  void resizeGL(int width, int height);
-  void paintGL();
-#endif
+
   void vertexChanged(double size, double shift);
-#if defined(QT_CORE_LIB)
+
   void wheelEvent(QWheelEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mousePressEvent(QMouseEvent *event) override;
-#endif
+
 
 private:
 //  void insertColomn(int pos, double min, double max);
@@ -184,8 +175,6 @@ private:
 
   int plotWidth;
   int plotHeight;
-
-  bool dataChanged;
 
   // Unused for now //
   bool showGrid;
@@ -222,32 +211,4 @@ public:
 //
 //----------------------------------------------
 
-
-//----------------------------------------------
-//  TESTING TEXT RENDER USING BITMAP
-//
-class BitmapFont
-{
-public:
-  BitmapFont();
- ~BitmapFont();
-  bool Load(const char *fname);
-  void Print(const char *Text, double x, double y);
-  void Select();
-  void Bind();
-  void SetBlend();
-  GLuint TexID;
-
-private:
-  int CellX,CellY,YOffset,RowPitch;
-  float RowFactor,ColFactor;
-  char Base;
-  char Width[256];
-  int RenderStyle;
-};
-//
-//----------------------------------------------
-
-
-std::string get_working_path();
 #endif // OPENGLPLOT_H

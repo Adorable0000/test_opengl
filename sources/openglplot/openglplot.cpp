@@ -7,7 +7,6 @@
 #include FT_BITMAP_H
 
 
-BitmapFont Font;    // test
 FreeTypeFont fr;    // test
 FT_Face face;       // test
 FT_Library ft;      // test
@@ -387,6 +386,7 @@ void OpenGLPlot::paintGL()
   double gpu_time = time2 - time1;
 
   printf("GPU TIME: %.6f sec\n", gpu_time);
+  printf("\n");
 }
 
 

@@ -53,16 +53,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::replot()
 {
-//  double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+  double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
 
-//  glplot0->addData(x1, y1);
+  glplot0->addData(x1, y1);
 
 //  glplot1->addData(x2, y2);
   glplot0->update();
 //  glplot1->update();
 
-//  double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
-//  double cpu_time = time2 - time1;
+  double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+  double cpu_time = time2 - time1;
 
-//  printf("GPU TIME: %.6f sec\n", cpu_time);
+  printf("CPU TIME: %.6f sec\n", cpu_time);
+  printf("\n");
 }

@@ -26,13 +26,14 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Gui REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS OpenGL REQUIRED)
 if(${QT_VERSION_MAJOR} MATCHES "6")
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS OpenGLWidgets REQUIRED)
+    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS OpenGLWidgets REQUIRED)
 endif()
 
 
 add_library(openglplot
     "${CMAKE_CURRENT_LIST_DIR}/openglplot.cpp"
     "${CMAKE_CURRENT_LIST_DIR}/openglplot.h"
+    "${CMAKE_CURRENT_LIST_DIR}/shaders.h"
 )
 
 

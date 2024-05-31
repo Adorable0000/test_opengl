@@ -1,76 +1,9 @@
 #include "openglplot.h"
+#include "shaders.h"
 #include <iostream>
 
-#include "ft2build.h"
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_BITMAP_H
 
-
-FreeTypeFont fr;    // test
-FT_Face face;       // test
-FT_Library ft;      // test
-
-
-/*!
- * \brief vertexShaderSmooth shader source code.
- *
- * Calculating the distance from a fragment
- * to the line using the interpolated line
- * center point attribute.
- * Vertex transforming the normalized projected
- * vertex position to the viewport space
- */
-static const char *vertexShaderSmooth_120 =
-    "#version 120\n"
-    "uniform vec2 uViewPort;\n"
-    "varying vec2 vLineCenter;\n"
-    "void main()\n"
-    "{\n"
-    " vec4 pp = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-    " gl_Position = pp;\n"
-    " vec2 vp = uViewPort;\n"
-    " vLineCenter = 0.5*(pp.xy + vec2(1, 1))*vp;\n"
-    "}\n";
-
-
-/*!
- * \brief fragmentShaderSmooth shader source code
- *
- * Filtering line by adjusting the fragment's alpha
- * value based on the distance to the line.
- * To calculate the fragment's alpha value, the
- * fragment's distance to the line is compared
- * with the current line width and apply the power
- * function to the normalized difference between
- * those to achieve desired blurriness of the line
- */
-static const char *fragmentShaderSmooth_120 =
-    "#version 120\n"
-    "uniform float uLineWidth;\n"
-    "uniform vec4 uColor;\n"
-    "uniform float uBlendFactor;\n"
-    "varying vec2 vLineCenter;\n"
-    "void main(void)\n"
-    "{\n"
-    " vec4 col = uColor;\n"
-    " double d = length(vLineCenter-gl_FragCoord.xy);\n"
-    " double w = uLineWidth;\n"
-    " if (d>w){\n"
-    "   col.w = 0;\n"
-    " }\n"
-    " else{\n"
-    "   col.w *= pow(float((w-d)/w), uBlendFactor);\n"
-    " }\n"
-    " gl_FragColor = col;"
-    "}\n";
-
-
-#if defined (QT_CORE_LIB)
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
-#else
-OpenGLPlot::OpenGLPlot()
-#endif
 {
   //dataChanged = false;
   showGrid = false;
@@ -83,6 +16,7 @@ OpenGLPlot::OpenGLPlot()
   paintData.yData.resize(15);
   mouseMove = 0;
   mousePressPos = 0;
+
 }
 
 
@@ -93,11 +27,13 @@ OpenGLPlot::~OpenGLPlot()
   glDisable(GL_BLEND);
   glDisable(GL_LINE_SMOOTH);
   glDisable(GL_ALPHA_TEST);
-  glLoadIdentity();
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1, &VBO);
+
 }
 
 
-GLuint VBO;
+
 /*!
  * \brief OpenGLPlot::initializeGL Initializing OpenGL functions.
  *
@@ -111,22 +47,27 @@ GLuint VBO;
  */
 void OpenGLPlot::initializeGL()
 {
-#if defined (QT_CORE_LIB)
   initializeOpenGLFunctions();
-#endif
+
   float version = getGLversion();;
-  printf("%f\n", version);
+  printf("OpenGL Version: %f\n", version);
+  printf("GLSL Version :%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set background color
   glGenBuffers(1, &VBO);
+  glGenVertexArrays(1, &VAO);
+
+  glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
 //  glEnable(GL_DEPTH_TEST);                            // Enable depth test to exclude some odd artifacts
 //  glDepthFunc(GL_ALWAYS);                             // Element always pass depth test
   glEnable(GL_BLEND);                                 // Enable color mix
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // Mix colors using scale func for input and output color to smooth lines
-  glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);             // Set fastest line smoothing
+  glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);             // Set fastest line smoothing
   glEnable(GL_LINE_SMOOTH);                           // Enable line smoothing
   glEnable(GL_ALPHA_TEST);                            // Enable alpha test to use transparency for smoothing
+//  shaderInit();
 
 //----------------------------------------------
 //  TESTING TEXT RENDER USING FREETYPE 2
@@ -153,33 +94,35 @@ void OpenGLPlot::resizeGL(int width, int height)
 {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();                                 // Clear render matrix
-  glViewport(0, 0, reinterpret_cast<GLint>(width), reinterpret_cast<GLint>(height));    // Change size of render window
+  glViewport(0, 0, width, height);    // Change size of render window
+
   plotWidth = width;
   plotHeight = height;
-  gridLinesHeight = height;
-  gridLinesWidth = width;
+
+  pixelWidth = (sizeRange.xRange.upper-sizeRange.xRange.lower)/static_cast<double>(width);
+  pixelHeight = (sizeRange.yRange.upper-sizeRange.yRange.lower)/static_cast<double>(height);
+
+  int lineSizeX = height;
+  int lineSizeY = width;
 /*
   Keep grid dotted lines sizes divisible by 4 so that
   the last dot of line will always touch the higher line
   Remember that 1 line need 4 values for each dot
 */
-  int mar_h = gridLinesHeight % 4;
+  int mar_h = height % 4;
   if(mar_h > 0)
     {
-      gridLinesHeight += (4-mar_h);
+      lineSizeX += (4-mar_h);
     }
 
-  int mar_w = gridLinesWidth % 4;
+  int mar_w = width % 4;
   if(mar_w > 0)
     {
-      gridLinesWidth += (4-mar_w);
+      lineSizeY += (4-mar_w);
     }
-
-  //dataChanged = true;
 }
 
-double wpix;        // test value
-double hpix;        // test value
+
 /*!
  * \brief OpenGLPlot::paintGL Main paint event
  *
@@ -193,195 +136,134 @@ void OpenGLPlot::paintGL()
 {
   double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
 
-  double xlow = sizeRange.xRange.lower;
-  double xup = sizeRange.xRange.upper;
-  double xbounds = xup - xlow;
-  double ylow = sizeRange.yRange.lower;
-  double yup = sizeRange.yRange.upper;
-  double ybounds = yup - ylow;
-  int hlinesize = gridLinesHeight;
-  int wlinesize = gridLinesWidth;
-  double wpixel = xbounds/plotWidth;    // width of pixel relative to graph
-  double hpixel = ybounds/plotHeight;    // height of pixel relative to graph
-  wpix = xbounds/plotWidth;  // test value
-  hpix = ybounds/plotHeight;  // test value
 
-/*
-  if(xbounds < 10)
-    {
-      return;
-    }
+//  std::vector<GLdouble> hLine1;
+//  hLine1.resize(wlinesize);     // Horizontal dotted line
 
-  std::vector<GLdouble> hLine1;
-  hLine1.resize(wlinesize);     // Horizontal dotted line
+//  std::vector<GLdouble> hLine2;
+//  hLine2.resize(wlinesize);
 
-  std::vector<GLdouble> hLine2;
-  hLine2.resize(wlinesize);
+//  std::vector<GLdouble> hLine3;
+//  hLine3.resize(wlinesize);
 
-  std::vector<GLdouble> hLine3;
-  hLine3.resize(wlinesize);
+//  std::vector<GLdouble> hLine4;
+//  hLine4.resize(2*2);
 
-  std::vector<GLdouble> hLine4;
-  hLine4.resize(2*2);
+//  std::vector<GLdouble> vLine1;
+//  vLine1.resize(hlinesize);
 
-  std::vector<GLdouble> vLine1;
-  vLine1.resize(hlinesize);
+//  std::vector<GLdouble> vLine2;
+//  vLine2.resize(2*2);
 
-  std::vector<GLdouble> vLine2;
-  vLine2.resize(2*2);
+//  std::vector<GLdouble> vLine3;
+//  vLine3.resize(hlinesize);
 
-  std::vector<GLdouble> vLine3;
-  vLine3.resize(hlinesize);
+//  std::vector<GLdouble> hLine5;
+//  hLine5.resize(wlinesize);
 
-  std::vector<GLdouble> hLine5;
-  hLine5.resize(wlinesize);
+//  hLine4[0] = xlow;
+//  hLine4[1] = ylow;
+//  hLine4[2] = xup;
+//  hLine4[3] = ylow;
 
-  hLine4[0] = xlow;
-  hLine4[1] = ylow;
-  hLine4[2] = xup;
-  hLine4[3] = ylow;
-
-  for(int i = 0; i < wlinesize; i+=2)
-    {
-      hLine1[i] = xlow + i * wpixel;  // to keep the minium number of X values for line
-      hLine1[i+1] = (yup + ylow)/2;   // Y position of the line
-
-      hLine2[i] = xlow + i * wpixel;
-      hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
-
-      hLine3[i] = xlow + i * wpixel;
-      hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
-
-      hLine5[i] = xlow + i * wpixel;
-      hLine5[i+1] = yup;
-    }
-
-  for(int i = 0; i < hlinesize; i+=2)
-    {
-      vLine1[i] = (xup + xlow)/2;
-      vLine1[i+1] = ylow + i * hpixel;
-
-      vLine3[i] = xup;
-      vLine3[i+1] = ylow + i * hpixel;
-    }
-
-  vLine2[0] = xlow;
-  vLine2[1] = ylow;
-  vLine2[2] = xlow;
-  vLine2[3] = yup;
-*/
-
-//    if(dataChanged)
+//  for(int i = 0; i < wlinesize; i+=2)
 //    {
-//      vertexChanged(xbounds, xlow);
-//      dataChanged = false;
+//      hLine1[i] = xlow + i * wpixel;  // to keep the minium number of X values for line
+//      hLine1[i+1] = (yup + ylow)/2;   // Y position of the line
+
+//      hLine2[i] = xlow + i * wpixel;
+//      hLine2[i+1] = (((yup + ylow)/2) + yup)/2;
+
+//      hLine3[i] = xlow + i * wpixel;
+//      hLine3[i+1] = (((yup + ylow)/2) + ylow)/2;
+
+//      hLine5[i] = xlow + i * wpixel;
+//      hLine5[i+1] = yup;
 //    }
+
+//  for(int i = 0; i < hlinesize; i+=2)
+//    {
+//      vLine1[i] = (xup + xlow)/2;
+//      vLine1[i+1] = ylow + i * hpixel;
+
+//      vLine3[i] = xup;
+//      vLine3[i+1] = ylow + i * hpixel;
+//    }
+
+//  vLine2[0] = xlow;
+//  vLine2[1] = ylow;
+//  vLine2[2] = xlow;
+//  vLine2[3] = yup;
 
   makeCurrent();                                                  // Change render context
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
-//  glOrtho(xlow-(wpixel*10), xup+(wpixel*10), ylow-(hpixel*18), yup+(hpixel*10), -1, 1);   // Create perspective matrix with pixel based coordinates
+  glOrtho(sizeRange.xRange.lower-(pixelWidth*10),
+          sizeRange.xRange.upper+(pixelWidth*10),
+          sizeRange.yRange.lower-(pixelHeight*20),
+          sizeRange.yRange.upper+(pixelHeight*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
   glLoadIdentity();                                               // Clear current render matrix
 
   glBufferData(GL_ARRAY_BUFFER, Vertex.size()*sizeof(double), Vertex.data(), GL_DYNAMIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
   //-----------------------------------------------------------------
   //  TESTING LINE SMOOTHING WITH SHADER
   //
-//  GLuint vertexSmoothShader;
-//  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
-//  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth_120, NULL);
-//  glCompileShader(vertexSmoothShader);
-//  GLint succ;
-//  GLchar infolog[512];
-//  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &succ);
-//  if(!succ)
-//    {
-//      glGetShaderInfoLog(vertexSmoothShader, 512, NULL, infolog);
-//      printf("vertex shader, %s\n", infolog);
-//    }
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0);
 
-//  GLuint fragmentSmoothShader;
-//  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
-//  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth_120, NULL);
-//  glCompileShader(fragmentSmoothShader);
-//  glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &succ);
-//  if(!succ)
-//    {
-//      glGetShaderInfoLog(fragmentSmoothShader, 512, NULL, infolog);
-//      printf("fragment shader, %s\n", infolog);
-//    }
+  glUseProgram(shaderProgram);
+  glBindVertexArray(VAO);
 
-//  GLuint shaderProgram;
-//  shaderProgram = glCreateProgram();
-//  glAttachShader(shaderProgram, vertexSmoothShader);
-//  glAttachShader(shaderProgram, fragmentSmoothShader);
-//  glLinkProgram(shaderProgram);
-//  glUseProgram(shaderProgram);
-//  printf("create shader program, %d\n", glGetError());
+  glEnableVertexAttribArray(0);
 
-//  glDeleteShader(vertexSmoothShader);
-//  glDeleteShader(fragmentSmoothShader);
-//  glVertexAttribPointer(0, Vertex.size()/2, GL_FLOAT, GL_FALSE, Vertex.size()/2*sizeof(GL_FLOAT), (GLvoid*)0);
-//  glEnableVertexAttribArray(0);
-//  printf("vertex attrib, %d\n", glGetError());
-  //
   //-----------------------------------------------------------------
 
-  glDisable(GL_LINE_SMOOTH);
-  glDisable(GL_ALPHA_TEST);
+//  glDisable(GL_LINE_SMOOTH);
+//  glDisable(GL_ALPHA_TEST);
   glEnableClientState(GL_VERTEX_ARRAY);
 
-/*
-  glColor4f(0,0,0,0.5);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
-  glDrawArrays(GL_LINES, 0, hLine1.size()/2);
+//  glColor4f(0,0,0,0.5);
 
-  glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
-  glDrawArrays(GL_LINES, 0, vLine1.size()/2);
+//  glVertexPointer(2, GL_DOUBLE, 0, hLine1.data());
+//  glDrawArrays(GL_LINES, 0, hLine1.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine2.data());
-  glDrawArrays(GL_LINES, 0, hLine2.size()/2);
+//  glVertexPointer(2, GL_DOUBLE, 0, vLine1.data());
+//  glDrawArrays(GL_LINES, 0, vLine1.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine3.data());
-  glDrawArrays(GL_LINES, 0, hLine3.size()/2);
+//  glVertexPointer(2, GL_DOUBLE, 0, hLine2.data());
+//  glDrawArrays(GL_LINES, 0, hLine2.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
-  glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
+//  glVertexPointer(2, GL_DOUBLE, 0, hLine3.data());
+//  glDrawArrays(GL_LINES, 0, hLine3.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, vLine2.data());
-  glDrawArrays(GL_LINE_STRIP, 0, vLine2.size()/2);
+//  glVertexPointer(2, GL_DOUBLE, 0, hLine4.data());
+//  glDrawArrays(GL_LINE_STRIP, 0, hLine4.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, vLine3.data());
-  glDrawArrays(GL_LINES, 0, vLine3.size()/2);
+//  glVertexPointer(2, GL_DOUBLE, 0, vLine2.data());
+//  glDrawArrays(GL_LINE_STRIP, 0, vLine2.size()/2);
 
-  glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
-  glDrawArrays(GL_LINES, 0, hLine5.size()/2);
-*/
-  glEnable(GL_LINE_SMOOTH);
-  glEnable(GL_ALPHA_TEST);
+//  glVertexPointer(2, GL_DOUBLE, 0, vLine3.data());
+//  glDrawArrays(GL_LINES, 0, vLine3.size()/2);
+
+//  glVertexPointer(2, GL_DOUBLE, 0, hLine5.data());
+//  glDrawArrays(GL_LINES, 0, hLine5.size()/2);
+
+//  glEnable(GL_LINE_SMOOTH);
+//  glEnable(GL_ALPHA_TEST);
 
   glColor4f(penColor.redF(), penColor.greenF(), penColor.blueF(), penColor.alphaF());   // Set texture color
 //  glVertexPointer(2, GL_DOUBLE, 0, Vertex.data());
-  glVertexPointer(2, GL_DOUBLE, 0, NULL);                          // Enable vertex matrix
+
+  glVertexPointer(2, GL_FLOAT, 0, NULL);                          // Enable vertex matrix
   glDrawArrays(GL_LINE_STRIP, 0, Vertex.size()/2);
   glDisableClientState(GL_VERTEX_ARRAY);                          // Disable vertex matrix
-//--------------------------------------------------------------------------------------------
-//  TESTING TEXT RENDER USING BITMAP
-//
-//  glEnable(GL_TEXTURE_2D);
-//  Font.Select();
-//  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", 0, 0);
-//  Font.Print("1, 2, 3, 4, 5, 6, 7, 8, 9, 0", xlow, ylow-(hpixel*18));     // size of textures is 16 pixels, so we should add 2 pixels
-//  glDisable(GL_TEXTURE_2D);
-//  glFlush();
-//
-//--------------------------------------------------------------------------------------------
+
+  glBindVertexArray(0);
+
   double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
   double gpu_time = time2 - time1;
 
@@ -390,21 +272,81 @@ void OpenGLPlot::paintGL()
 }
 
 
-void OpenGLPlot::vertexChanged(double size, double shift)
+void OpenGLPlot::shaderInit()
 {
-  if(Vertex.size() != size*2)  {Vertex.resize(size*2);}
-  if(paintData.xData.size() < Vertex.size()/2) {return;}
-  float strideY = (sizeRange.yRange.upper + sizeRange.yRange.lower) * 0.5;
-  float diffY = (sizeRange.yRange.upper - sizeRange.yRange.lower) * 0.5;
-  float strideX = (sizeRange.xRange.upper + sizeRange.xRange.lower) * 0.5;
-  float diffX = (sizeRange.xRange.upper - sizeRange.xRange.lower) * 0.5;
-  float downScale = strideX/diffX;
-  for (int i = 0; i < size*2; i+=2)
+  vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth_330, NULL);
+  glCompileShader(vertexSmoothShader);
+  GLint state;
+  GLchar infolog[512];
+  glGetShaderiv(vertexSmoothShader, GL_COMPILE_STATUS, &state);
+  if(state == GL_FALSE)
     {
-//      Vertex[i] = paintData.xData[i/2 + shift];
-//      Vertex[i+1] = paintData.yData[i/2 + shift];
-      Vertex[i] = ((paintData.xData[i/2 + shift]/diffX) - downScale) * 0.96;
-      Vertex[i+1] = ((paintData.yData[i/2 + shift] - strideY)/diffY) * 0.96;
+      glGetShaderInfoLog(vertexSmoothShader, 512, NULL, infolog);
+      printf("vertex shader failed, %s\n", infolog);
+    }
+
+  fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth_330, NULL);
+  glCompileShader(fragmentSmoothShader);
+  glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &state);
+  if(state == GL_FALSE)
+    {
+      glGetShaderInfoLog(fragmentSmoothShader, 512, NULL, infolog);
+      printf("fragment shader failed, %s\n", infolog);
+    }
+
+  shaderProgram = glCreateProgram();
+  glAttachShader(shaderProgram, vertexSmoothShader);
+  glAttachShader(shaderProgram, fragmentSmoothShader);
+  glLinkProgram(shaderProgram);
+  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &state);
+  if(state == GL_FALSE)
+    {
+      glGetProgramInfoLog(shaderProgram, 512, NULL, infolog);
+      printf("program shader link failed, %s\n", infolog);
+    }
+
+  glDetachShader(shaderProgram, vertexSmoothShader);
+  glDetachShader(shaderProgram, fragmentSmoothShader);
+}
+
+
+void OpenGLPlot::vboInit()
+{
+
+}
+
+
+void OpenGLPlot::vaoInit()
+{
+
+}
+
+
+
+void OpenGLPlot::vertexChanged(float size, float shift)
+{
+  if(paintData.xData.size() < Vertex.size()/2) {return;}
+  unsigned long s = static_cast<unsigned long>(size);
+  unsigned long sh = static_cast<unsigned long>(shift);
+  if(Vertex.size() != s*2)  {Vertex.resize(s*2);}
+//  float strideY = ((sizeRange.yRange.upper + sizeRange.yRange.lower)) * 0.5;
+//  float diffY = ((sizeRange.yRange.upper - sizeRange.yRange.lower)) * 0.5;
+//  float strideX = ((sizeRange.xRange.upper + sizeRange.xRange.lower)) * 0.5;
+//  float diffX = ((sizeRange.xRange.upper - sizeRange.xRange.lower)) * 0.5;
+//  float downScale = (strideX/diffX);
+//  for (unsigned long i = 0; i < s*2; i+=2)
+//    {
+//      Vertex[i] = ((paintData.xData[i/2 + sh]/diffX) - downScale);
+//      Vertex[i+1] = ((paintData.yData[i/2 + sh] - strideY)/diffY);
+//    }
+
+  // with glOrtho
+  for (unsigned long i = 0; i < s*2; i+=2)
+    {
+      Vertex[i] = paintData.xData[i/2 + sh];
+      Vertex[i+1] = paintData.yData[i/2 + sh];
     }
 }
 
@@ -415,13 +357,36 @@ float OpenGLPlot::getGLversion()
   GLfloat minver = 0;
   glGetFloatv(GL_MAJOR_VERSION, &majver);
   glGetFloatv(GL_MINOR_VERSION, &minver);
-  return majver + (minver/10);
+  float ver = majver + (minver/10);
+  return ver;
 }
 
 
-int OpenGLPlot::getGLSLversion()
+/*!
+ * \brief OpenGLPlot::getShader
+ * \param int type shader type
+ * \param float version supported OpenGL verion
+ * \return shader pointer, see shader.h
+ */
+const char* OpenGLPlot::getShader(int type, float version)
 {
-
+  int sh_num = sizeof(Shaders)/sizeof(Shaders[0]);
+  version += 0.01;
+  for(int i = 0; i < sh_num; i++)
+    {
+      if(type == Shaders[i].type)
+        {
+          if((version >= 3.3) && (version >= Shaders[i].gl_min_ver) && (Shaders[i].gl_min_ver >= 3.29))
+            {
+              return Shaders[i].shader;
+            }
+          if((version < 3.3) && (version >= 2.1) && (version >= Shaders[i].gl_min_ver))
+            {
+              return Shaders[i].shader;
+            }
+        }
+    }
+  return nullptr;
 }
 
 
@@ -432,7 +397,7 @@ int OpenGLPlot::getGLSLversion()
  *
  *
  */
-void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
+void OpenGLPlot::addData(std::vector<float> &keys, std::vector<float> &values)
 {
   if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()))
     {
@@ -443,21 +408,20 @@ void OpenGLPlot::addData(std::vector<double> &keys, std::vector<double> &values)
       paintData.xData.resize(keys.size());
       paintData.yData.resize(values.size());
     }
-
-  memmove(paintData.xData.data(), keys.data(), keys.size() * sizeof (double));
-  memmove(paintData.yData.data(), values.data(), values.size() * sizeof (double));
+  memmove(paintData.xData.data(), keys.data(), keys.size() * sizeof (float));
+  memmove(paintData.yData.data(), values.data(), values.size() * sizeof (float));
   vertexChanged(paintData.xData.size(), 0);
 }
 
 
-void OpenGLPlot::setYRange(double min, double max)
+void OpenGLPlot::setYRange(float min, float max)
 {
   sizeRange.yRange.lower = min;
   sizeRange.yRange.upper = max;
 }
 
 
-void OpenGLPlot::setXRange(double min, double max)
+void OpenGLPlot::setXRange(float min, float max)
 {
   sizeRange.xRange.lower = min;
   sizeRange.xRange.upper = max;
@@ -550,6 +514,7 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
         {
           sizeRange.xRange.lower += mouseMove;
           vertexChanged(sizeRange.xRange.upper - sizeRange.xRange.lower, sizeRange.xRange.lower);
+          setXRange(sizeRange.xRange.lower, sizeRange.xRange.upper);
           this->update();
         }
       if((sizeRange.xRange.upper + mouseMove < paintData.xData.size()) &&
@@ -557,6 +522,7 @@ void OpenGLPlot::mouseMoveEvent(QMouseEvent *event)
         {
           sizeRange.xRange.upper += mouseMove;
           vertexChanged(sizeRange.xRange.upper - sizeRange.xRange.lower, sizeRange.xRange.lower);
+          setXRange(sizeRange.xRange.lower, sizeRange.xRange.upper);
           this->update();
         }
       mousePressPos = event->pos().x();
@@ -581,10 +547,14 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
       sizeRange.xRange.lower += move;
     }
   vertexChanged(sizeRange.xRange.upper - sizeRange.xRange.lower, sizeRange.xRange.lower);
+  setXRange(sizeRange.xRange.lower, sizeRange.xRange.upper);
   this->update();
   event->accept();
 }
 #endif
+
+
+
 
 
 /*!
@@ -857,6 +827,7 @@ FreeTypeFont::FreeTypeFont()
 
 FreeTypeFont::~FreeTypeFont()
 {
+  FT_Done_Face(face);
   FT_Done_FreeType(ft);
 }
 
@@ -873,7 +844,7 @@ void FreeTypeFont::ftInit(const char *font_name)
       printf("Error, can't load font\n");
       return;
     }
-  if(FT_Set_Pixel_Sizes(face, 0, 48))
+  if(FT_Set_Pixel_Sizes(face, 0, 20))
     {
       printf("Error, can't set size");
       return;
@@ -884,6 +855,13 @@ void FreeTypeFont::ftInit(const char *font_name)
       return;
     }
 }
+
+
+void FreeTypeFont::RenderText(std::string &text, GLfloat x, GLfloat y, GLfloat scale)
+{
+
+}
+
 
 //
 //----------------------------------------------

@@ -21,11 +21,11 @@ public:
   OpenGLPlot *glplot0;
   OpenGLPlot *glplot1;
 
-  std::vector<double> x1;
-  std::vector<double> y1;
+  std::vector<float> x1;
+  std::vector<float> y1;
 
-  std::vector<double> x2;
-  std::vector<double> y2;
+  std::vector<float> x2;
+  std::vector<float> y2;
 
 public slots:
   void replot();

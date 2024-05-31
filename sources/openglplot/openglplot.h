@@ -4,15 +4,19 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-#include <QOpenGLFunctions_3_1>
+#include <QOpenGLFunctions_3_3_Core>
 
 #include <QMouseEvent>
 #include <QWheelEvent>
 
-
 #include <vector>
 #include <GL/gl.h>
 #include <GL/glu.h>
+
+#include "ft2build.h"
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_BITMAP_H
 
 
 /*!
@@ -88,13 +92,20 @@ public:
   void addHorizontalLine(double xmin, double xmax, double y);
   void addWerticalLine(double x, double ymin, double ymax);
 
-  void setMaxXSize(double width);
-  void setMaxYSize(double height);
+  void setDotWidth(double size);
+  void setDotHeight(double size);
+
+  void setLineSizeX(double width);
+  void setLineSizeY(double height);
+
+  void setGridSize(double height, double width);
 
 private:
   std::vector<std::vector<GLdouble>> Elements; 
-  int maxXSize;   /// optimal size of the horizontal dotted lines
-  int maxYSize;  /// optimal size of the vertical dotted lines
+  int maxLineSizeX;   /// optimal size of the horizontal dotted lines
+  int maxLineSizeY;  /// optimal size of the vertical dotted lines
+  double dotWidth;
+  double dotHeight;
 };
 
 
@@ -120,13 +131,36 @@ public:
 
   void drawAxis();
 
-  void addLine(double xmin, double xmax, double ymin, double ymax);
+  void addLines(double xmin, double xmax, double ymin, double ymax);
   void addTick(double xmin, double xmax, double ymin, double ymax);
+
+  void setAxisSize(double height, double width);
 };
 
 
-class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions_3_1
+//----------------------------------------------
+//  TESTING TEXT RENDER USING FREETYPE 2
+//
 
+class FreeTypeFont
+{
+public:
+  FreeTypeFont();
+  ~FreeTypeFont();
+
+  void ftInit(const char *font_name);
+  void RenderText(std::string &text, GLfloat x, GLfloat y, GLfloat scale);
+
+private:
+  FT_Face face;       // test
+  FT_Library ft;      // test
+
+};
+//
+//----------------------------------------------
+
+
+class OpenGLPlot : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
   Q_OBJECT
 
@@ -134,8 +168,7 @@ public:
   explicit OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
   float getGLversion();
-  int getGLSLversion();
-  void addData(std::vector<double> &keys, std::vector<double> &values);
+  void addData(std::vector<float> &keys, std::vector<float> &values);
 
   void setColorf(float red, float green, float blue);
   void setColor(int red, int green, int blue);
@@ -143,8 +176,8 @@ public:
   void setQColor(QColor col);
   void setColor(OGLColor col);
 
-  void setYRange(double min, double max);
-  void setXRange(double min, double max);
+  void setYRange(float min, float max);
+  void setXRange(float min, float max);
 
   void gridVisible(bool state);
   void axisVisible(bool state);
@@ -156,21 +189,34 @@ protected:
   void resizeGL(int width, int height) override;
   void paintGL() override;
 
-  void vertexChanged(double size, double shift);
-
   void wheelEvent(QWheelEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mousePressEvent(QMouseEvent *event) override;
 
 
 private:
+
+  void shaderInit();
+  void vboInit();
+  void vaoInit();
+  void vertexChanged(float size, float shift);
+  const char* getShader(int type, float version);
 //  void insertColomn(int pos, double min, double max);
 //  void insertRow();
 
-  struct drawData{std::vector<double> xData; std::vector<double> yData;};
+  GLuint VBO;
+  GLuint VAO;
+  GLuint FBO;
+  GLuint RBO;
+
+  GLuint vertexSmoothShader;
+  GLuint fragmentSmoothShader;
+  GLuint shaderProgram;
+
+  struct drawData{std::vector<float> xData; std::vector<float> yData;};
   drawData paintData;
 
-  struct Range{double lower; double upper;};
+  struct Range{float lower; float upper;};
   struct {Range xRange; Range yRange;}sizeRange;
 
   int plotWidth;
@@ -187,28 +233,15 @@ private:
   int wheelMove;
 
   OGLColor penColor;
+
   QColor penQColor;
 
-  int gridLinesWidth;   /// optimal size of the horizontal dotted lines
-  int gridLinesHeight;  /// optimal size of the vertical dotted lines
+  float pixelWidth;
+  float pixelHeight;
 
-  std::vector<GLdouble> Vertex;
+  std::vector<GLfloat> Vertex;
+
+  FreeTypeFont fr;    // test
 };
-
-
-//----------------------------------------------
-//  TESTING TEXT RENDER USING FREETYPE 2
-//
-
-class FreeTypeFont
-{
-public:
-  FreeTypeFont();
-  ~FreeTypeFont();
-
-  void ftInit(const char *font_name);
-};
-//
-//----------------------------------------------
 
 #endif // OPENGLPLOT_H

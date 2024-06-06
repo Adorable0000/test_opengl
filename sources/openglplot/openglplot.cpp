@@ -5,7 +5,6 @@
 
 OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
 {
-  //dataChanged = false;
   showGrid = false;
   showAxis = false;
   sizeRange.xRange.lower = 0;
@@ -17,6 +16,24 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
   mouseMove = 0;
   mousePressPos = 0;
 
+  double min = 1900;
+  double max = 16000;
+
+  double tickStep = getTickStep(min, max, 5);
+
+  std::vector<double> tickPosVector = createTickPosVector(tickStep, min, max);
+  for (uint i=0; i<tickPosVector.size(); ++i)
+  {
+    printf("tick pos: %f\n", tickPosVector.at(i));
+  }
+  printf("\n");
+
+  std::vector<double> subTickPosVector = createSubTickPosVector(tickStep, tickPosVector, min, max);
+
+  for(uint i = 0; i < subTickPosVector.size(); i++)
+    {
+      printf("subtick pos: %f\n", subTickPosVector[i]);
+    }
 }
 
 
@@ -49,9 +66,8 @@ void OpenGLPlot::initializeGL()
 {
   initializeOpenGLFunctions();
 
-  float version = getGLversion();;
-  printf("OpenGL Version: %f\n", version);
-  printf("GLSL Version :%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+//  printf("OpenGL Version: %f\n", getGLversion());
+//  printf("GLSL Version :%s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
   glClearColor(1.0f, 1.0f, 1.0f, 1.0f);               // Set background color
   glGenBuffers(1, &VBO);
@@ -71,7 +87,7 @@ void OpenGLPlot::initializeGL()
 
 //----------------------------------------------
 //  TESTING TEXT RENDER USING FREETYPE 2
-  fr.ftInit("DejaVuMathTeXGyre.ttf");
+  fr.ftInit("NotoSans-CondensedLight.ttf");
 //
 //----------------------------------------------
 }
@@ -134,7 +150,7 @@ void OpenGLPlot::resizeGL(int width, int height)
  */
 void OpenGLPlot::paintGL()
 {
-  double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+//  double time1 = clock() / static_cast<double>(CLOCKS_PER_SEC);
 
 
 //  std::vector<GLdouble> hLine1;
@@ -196,6 +212,8 @@ void OpenGLPlot::paintGL()
 //  vLine2[3] = yup;
 
   makeCurrent();                                                  // Change render context
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
+
   glMatrixMode(GL_PROJECTION);                                    // Change to projection mode to enable multiplication between current and perspective matrix
   glLoadIdentity();                                               // Clear current render matrix
   glOrtho(sizeRange.xRange.lower-(pixelWidth*10),
@@ -203,11 +221,9 @@ void OpenGLPlot::paintGL()
           sizeRange.yRange.lower-(pixelHeight*20),
           sizeRange.yRange.upper+(pixelHeight*10), -1, 1);   // Create perspective matrix with pixel based coordinates
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear current color buffer
   glMatrixMode(GL_MODELVIEW);                                     // Change to object-view matrix
-  glLoadIdentity();                                               // Clear current render matrix
 
-  glBufferData(GL_ARRAY_BUFFER, Vertex.size()*sizeof(double), Vertex.data(), GL_DYNAMIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, Vertex.size()*sizeof(GLfloat), Vertex.data(), GL_DYNAMIC_DRAW);
 
   //-----------------------------------------------------------------
   //  TESTING LINE SMOOTHING WITH SHADER
@@ -264,18 +280,18 @@ void OpenGLPlot::paintGL()
 
   glBindVertexArray(0);
 
-  double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
-  double gpu_time = time2 - time1;
+//  double time2 = clock() / static_cast<double>(CLOCKS_PER_SEC);
+//  double gpu_time = time2 - time1;
 
-  printf("GPU TIME: %.6f sec\n", gpu_time);
-  printf("\n");
+//  printf("GPU TIME: %.6f sec\n", gpu_time);
+//  printf("\n");
 }
 
 
 void OpenGLPlot::shaderInit()
 {
   vertexSmoothShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexSmoothShader, 1, &vertexShaderSmooth_330, NULL);
+  glShaderSource(vertexSmoothShader, 1, &vertexShader_330, NULL);
   glCompileShader(vertexSmoothShader);
   GLint state;
   GLchar infolog[512];
@@ -287,7 +303,7 @@ void OpenGLPlot::shaderInit()
     }
 
   fragmentSmoothShader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentSmoothShader, 1, &fragmentShaderSmooth_330, NULL);
+  glShaderSource(fragmentSmoothShader, 1, &fragmentShader_330, NULL);
   glCompileShader(fragmentSmoothShader);
   glGetShaderiv(fragmentSmoothShader, GL_COMPILE_STATUS, &state);
   if(state == GL_FALSE)
@@ -310,19 +326,6 @@ void OpenGLPlot::shaderInit()
   glDetachShader(shaderProgram, vertexSmoothShader);
   glDetachShader(shaderProgram, fragmentSmoothShader);
 }
-
-
-void OpenGLPlot::vboInit()
-{
-
-}
-
-
-void OpenGLPlot::vaoInit()
-{
-
-}
-
 
 
 void OpenGLPlot::vertexChanged(float size, float shift)
@@ -363,41 +366,13 @@ float OpenGLPlot::getGLversion()
 
 
 /*!
- * \brief OpenGLPlot::getShader
- * \param int type shader type
- * \param float version supported OpenGL verion
- * \return shader pointer, see shader.h
- */
-const char* OpenGLPlot::getShader(int type, float version)
-{
-  int sh_num = sizeof(Shaders)/sizeof(Shaders[0]);
-  version += 0.01;
-  for(int i = 0; i < sh_num; i++)
-    {
-      if(type == Shaders[i].type)
-        {
-          if((version >= 3.3) && (version >= Shaders[i].gl_min_ver) && (Shaders[i].gl_min_ver >= 3.29))
-            {
-              return Shaders[i].shader;
-            }
-          if((version < 3.3) && (version >= 2.1) && (version >= Shaders[i].gl_min_ver))
-            {
-              return Shaders[i].shader;
-            }
-        }
-    }
-  return nullptr;
-}
-
-
-/*!
  * \brief OpenGLPlot::addData
  * \param keys
  * \param values
  *
  *
  */
-void OpenGLPlot::addData(std::vector<float> &keys, std::vector<float> &values)
+void OpenGLPlot::setData(std::vector<float> &keys, std::vector<float> &values)
 {
   if((keys.size() == 0) || (values.size() == 0) || (keys.size() != values.size()))
     {
@@ -416,15 +391,27 @@ void OpenGLPlot::addData(std::vector<float> &keys, std::vector<float> &values)
 
 void OpenGLPlot::setYRange(float min, float max)
 {
-  sizeRange.yRange.lower = min;
-  sizeRange.yRange.upper = max;
+  if(sizeRange.yRange.lower != min)
+    {
+      sizeRange.yRange.lower = min;
+    }
+  if(sizeRange.yRange.upper != max)
+    {
+      sizeRange.yRange.upper = max;
+    }
 }
 
 
 void OpenGLPlot::setXRange(float min, float max)
 {
-  sizeRange.xRange.lower = min;
-  sizeRange.xRange.upper = max;
+  if(sizeRange.xRange.lower != min)
+    {
+      sizeRange.xRange.lower = min;
+    }
+  if(sizeRange.xRange.upper != max)
+    {
+      sizeRange.xRange.upper = max;
+    }
 }
 
 
@@ -554,7 +541,216 @@ void OpenGLPlot::wheelEvent(QWheelEvent *event)
 #endif
 
 
+double getMantissa(double input)
+{
+  double a = std::log10(input);
+  double aa = std::floor(a);
+  double mag = std::pow(10.0, aa);
+  return input/mag;
+}
 
+
+double getMagnitude(double input)
+{
+  double a = std::log10(input);
+  double aa = std::floor(a);
+  double mag = std::pow(10.0, aa);
+  return mag;
+}
+
+
+double pickClosest(double target, std::vector<double> &candidates)
+{
+  if (candidates.size() == 1)
+    //return candidates.first();
+    return candidates.front();
+  std::vector<double>::const_iterator it = std::lower_bound(candidates.begin(), candidates.end(), target);
+  if (it == candidates.end())
+    return *(it - 1);
+  else if (it == candidates.begin())
+    return *it;
+  else
+    return target-*(it - 1) < *it - target ? *(it - 1) : *it;
+}
+
+
+double cleanMantissa(double input)
+{
+  double magnitude = getMagnitude(input);
+  double mantissa = getMantissa(input);
+  std::vector<double> cand = {1.0, 2.0, 2.5, 5.0, 10.0};
+  return pickClosest(mantissa, cand)*magnitude;
+}
+
+int getFirstStep(double min, double tickStep)
+{
+  return std::ceil(min/tickStep);
+}
+
+int getLastStep(double max, double tickStep)
+{
+  return std::ceil(max/tickStep);
+}
+
+
+int getTickCount(double firstStep, double maxNum, double tickStep)
+{
+
+  double lastStep = getLastStep(maxNum, tickStep);
+  int tickCount = int(lastStep - firstStep);
+  return tickCount;
+}
+
+
+double getTickStep(double min, double max, int count)
+{
+  double exactStep = (max - min)/double(count + 1e-10);
+  return cleanMantissa(exactStep);
+}
+
+
+int getSubTickCount(double tickStep)
+{
+  int result = 1; // default to 1, if no proper value can be found
+
+  // separate integer and fractional part of mantissa:
+  double epsilon = 0.01;
+  double intPartf;
+  int intPart;
+  double mant = getMantissa(tickStep);
+  double fracPart = modf(mant, &intPartf);
+  intPart = int(intPartf);
+
+  // handle cases with (almost) integer mantissa:
+  if (fracPart < epsilon || 1.0 - fracPart < epsilon)
+  {
+    if (1.0-fracPart < epsilon)
+      ++intPart;
+    switch (intPart)
+    {
+      case 1: result = 4; break; // 1.0 -> 0.2 substep
+      case 2: result = 3; break; // 2.0 -> 0.5 substep
+      case 5: result = 4; break; // 5.0 -> 1.0 substep
+    }
+  } else
+  {
+    // handle cases with significantly fractional mantissa:
+    if (std::abs(fracPart - 0.5) < epsilon) // *.5 mantissa
+    {
+      switch (intPart)
+      {
+        case 2: result = 4; break; // 2.5 -> 0.5 substep
+      }
+    }
+    // if mantissa fraction isn't 0.0 or 0.5, don't bother finding good sub tick marks, leave default
+  }
+  return result;
+}
+
+
+
+double getSubTickStep(double tickStep, int subTickCount)
+{
+  subTickCount++;
+  return tickStep/subTickCount;
+}
+
+
+std::vector<double> createTickPosVector(double tickStep, double minMun, double maxNum)
+{
+  double firstTickStep = getFirstStep(minMun, tickStep);
+  int tickCount = getTickCount(firstTickStep, maxNum, tickStep);
+
+  std::vector<double> tickPosVector;
+  tickPosVector.resize(tickCount);
+  for (int i=0; i<tickCount; ++i)
+  {
+    tickPosVector[i] = (firstTickStep+i)*tickStep;
+
+  }
+  return tickPosVector;
+}
+
+
+std::vector<double> createSubTickPosVector(double tickStep, std::vector<double> &ticks, double minNum, double maxNum)
+{
+  int subPerTickCount = getSubTickCount(tickStep);
+  double subTickStep = getSubTickStep(tickStep, subPerTickCount);
+
+  std::vector<double> subTickPosVector;
+  int addFront = std::floor((ticks.front() - minNum)/subTickStep);
+  int addBack = std::floor((maxNum - ticks.back())/subTickStep);
+  int subTickCount = addFront + ((ticks.size() - 1) * subPerTickCount) + addBack;
+
+  subTickPosVector.reserve(subTickCount);
+  for(int i = 1; i < addFront + 1; ++i)
+    {
+      subTickPosVector.push_back(ticks[0] - i * subTickStep);
+    }
+
+  for(uint i = 0; i < ticks.size()-1; ++i)
+    {
+      for(int j = 1; j < subPerTickCount+1; ++j)
+        {
+          subTickPosVector.push_back(ticks[i] + j * subTickStep);
+        }
+    }
+
+  for(int i = 1; i < addBack + 1; ++i)
+    {
+      subTickPosVector.push_back(ticks.back() + i * subTickStep);
+    }
+  return subTickPosVector;
+}
+
+
+//----------------------------------------------
+//  TESTING TEXT RENDER USING FREETYPE 2
+//
+FreeTypeFont::FreeTypeFont()
+{
+
+}
+
+
+FreeTypeFont::~FreeTypeFont()
+{
+  FT_Done_Face(face);
+  FT_Done_FreeType(ft);
+}
+
+
+void FreeTypeFont::ftInit(const char *font_name)
+{
+  if(FT_Init_FreeType(&ft))
+    {
+      printf("Error, can't load freetype\n");
+      return;
+    }
+  if(FT_New_Face(ft, /*"DejaVuMathTeXGyre.ttf"*/ font_name, 0, &face))
+    {
+      printf("Error, can't load font\n");
+      return;
+    }
+  if(FT_Set_Pixel_Sizes(face, 0, 20))
+    {
+      printf("Error, can't set size");
+      return;
+    }
+  if(FT_Load_Char(face, '0', FT_LOAD_RENDER))
+    {
+      printf("Error, can't load glyph\n");
+      return;
+    }
+}
+
+
+void FreeTypeFont::RenderText(std::string &text, GLfloat x, GLfloat y)
+{
+
+}
+//
+//----------------------------------------------
 
 
 /*!
@@ -813,55 +1009,3 @@ OGLColor &OGLColor::operator=(OGL::Colors col)
 {
   return operator=(OGLColor(col));
 }
-
-
-
-//----------------------------------------------
-//  TESTING TEXT RENDER USING FREETYPE 2
-//
-FreeTypeFont::FreeTypeFont()
-{
-
-}
-
-
-FreeTypeFont::~FreeTypeFont()
-{
-  FT_Done_Face(face);
-  FT_Done_FreeType(ft);
-}
-
-
-void FreeTypeFont::ftInit(const char *font_name)
-{
-  if(FT_Init_FreeType(&ft))
-    {
-      printf("Error, can't load freetype\n");
-      return;
-    }
-  if(FT_New_Face(ft, /*"DejaVuMathTeXGyre.ttf"*/ font_name, 0, &face))
-    {
-      printf("Error, can't load font\n");
-      return;
-    }
-  if(FT_Set_Pixel_Sizes(face, 0, 20))
-    {
-      printf("Error, can't set size");
-      return;
-    }
-  if(FT_Load_Char(face, '0', FT_LOAD_RENDER))
-    {
-      printf("Error, can't load glyph\n");
-      return;
-    }
-}
-
-
-void FreeTypeFont::RenderText(std::string &text, GLfloat x, GLfloat y, GLfloat scale)
-{
-
-}
-
-
-//
-//----------------------------------------------

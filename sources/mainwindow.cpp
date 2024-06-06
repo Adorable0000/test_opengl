@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
   //  glplot0->setColor(Qt::blue);
   glplot0->setYRange(*std::min_element(y1.begin(), y1.end()), *std::max_element(y1.begin(), y1.end()));
   glplot0->setXRange(0, y1.size());
-  glplot0->addData(x1, y1);
+  glplot0->setData(x1, y1);
 
 //  glplot1->setColor(OGL::red);
 //  glplot1->setYRange(*std::min_element(y2.begin(), y2.end()), *std::max_element(y2.begin(), y2.end()));

@@ -88,39 +88,45 @@ public:
   Grid();
   ~Grid();
 
-  void drawGrid();
-  void addHorizontalLine(double xmin, double xmax, double y);
-  void addWerticalLine(double x, double ymin, double ymax);
+  void addHorizontalLine(double y);
+  void addWerticalLine(double x);
 
-  void setDotWidth(double size);
-  void setDotHeight(double size);
-
-  void setLineSizeX(double width);
-  void setLineSizeY(double height);
+  void setPixelSize(double height, double width);
 
   void setGridSize(double height, double width);
+
+  void setTickCount(int count);
+  void setTickStep(double step);
 
 private:
   std::vector<std::vector<GLdouble>> Elements; 
   int maxLineSizeX;   /// optimal size of the horizontal dotted lines
-  int maxLineSizeY;  /// optimal size of the vertical dotted lines
+  int maxLineSizeY;   /// optimal size of the vertical dotted lines
+
   double dotWidth;
   double dotHeight;
+
+  int tickCount;
+  double tickStep;
+
+  GLuint VBO;
+  GLuint VAO;
 };
 
 
-class TicksHandler
-{
-public:
-  TicksHandler();
-  ~TicksHandler();
+double getMantissa(double input);
+double getMagnitude(double input);
+double pickClosest(double target, std::vector<double> &candidates);
+double cleanMantissa(double input);
+int getFirstStep(double min, double tickStep);
+int getLastStep(double max, double tickStep);
+int getTickCount(double firstStep, double maxNum, double tickStep);
+double getTickStep(double min, double max, int count);
+int getSubTickCount(double tickStep);
+double getSubTickStep(double tickStep, int subTickCount);
+std::vector<double> createTickPosVector(double tickStep, double minMun, double maxNum);
+std::vector<double> createSubTickPosVector(double tickStep, std::vector<double> &ticks, double minNum, double maxNum);
 
-  void getTickCount();
-  void getTickStep();
-
-  void getSubTickCount();
-  void getSubTickStep();
-};
 
 
 class Axis
@@ -129,18 +135,38 @@ public:
   Axis();
   ~Axis();
 
-  void drawAxis();
-
   void addLines(double xmin, double xmax, double ymin, double ymax);
   void addTick(double xmin, double xmax, double ymin, double ymax);
 
+  void setPixelSize(double height, double width);
   void setAxisSize(double height, double width);
+
+  void setTickCount(int count);
+  void setTickStep(double step);
+  void setSubTickCount(int count);
+  void setSubTickStep(double step);
+
+private:
+  double pixelWidth;
+  double pixelHeight;
+
+  GLuint VBO;
+  GLuint VAO;
 };
 
 
 //----------------------------------------------
 //  TESTING TEXT RENDER USING FREETYPE 2
 //
+struct TextCharacter
+{
+  GLchar character;
+  GLuint TextureID;
+  GLfloat xTexCoord;
+  GLfloat yTexCoord;
+  GLfloat size;
+};
+
 
 class FreeTypeFont
 {
@@ -149,12 +175,12 @@ public:
   ~FreeTypeFont();
 
   void ftInit(const char *font_name);
-  void RenderText(std::string &text, GLfloat x, GLfloat y, GLfloat scale);
+  void RenderText(std::string &text, GLfloat x, GLfloat y);
 
 private:
+
   FT_Face face;       // test
   FT_Library ft;      // test
-
 };
 //
 //----------------------------------------------
@@ -168,7 +194,7 @@ public:
   explicit OpenGLPlot(QWidget *parent = nullptr);
   ~OpenGLPlot();
   float getGLversion();
-  void addData(std::vector<float> &keys, std::vector<float> &values);
+  void setData(std::vector<float> &keys, std::vector<float> &values);
 
   void setColorf(float red, float green, float blue);
   void setColor(int red, int green, int blue);
@@ -197,12 +223,10 @@ protected:
 private:
 
   void shaderInit();
-  void vboInit();
-  void vaoInit();
   void vertexChanged(float size, float shift);
   const char* getShader(int type, float version);
-//  void insertColomn(int pos, double min, double max);
-//  void insertRow();
+  void drawAxis();
+  void drawGrid();
 
   GLuint VBO;
   GLuint VAO;

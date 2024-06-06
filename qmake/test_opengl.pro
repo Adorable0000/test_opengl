@@ -31,6 +31,16 @@ INCLUDEPATH += ../sources/openglplot
 INCLUDEPATH += ../app
 
 unix: INCLUDEPATH += /usr/include/freetype2
+win32 {
+    INCLUDEPATH += /souces/openglplot/freetype-2.13.2/include
+    !contains(QMAKE_TARGET.arch, x86_64) {
+        ## Windows x86 (32bit) specific build here
+        LIBS += ../sources/openglplot/freetype-2.13.2/win32/freetype.lib
+    } else {
+        ## Windows x64 (64bit) specific build here
+        LIBS += ../sources/openglplot/freetype-2.13.2/win64/freetype.lib
+    }
+}
 LIBS += -lfreetype
 
 win32: LIBS += -lopengl32

@@ -95,9 +95,6 @@ public:
 
   void setGridSize(double height, double width);
 
-  void setTickCount(int count);
-  void setTickStep(double step);
-
 private:
   std::vector<std::vector<GLdouble>> Elements; 
   int maxLineSizeX;   /// optimal size of the horizontal dotted lines
@@ -105,9 +102,6 @@ private:
 
   double dotWidth;
   double dotHeight;
-
-  int tickCount;
-  double tickStep;
 
   GLuint VBO;
   GLuint VAO;
@@ -135,16 +129,8 @@ public:
   Axis();
   ~Axis();
 
-  void addLines(double xmin, double xmax, double ymin, double ymax);
-  void addTick(double xmin, double xmax, double ymin, double ymax);
-
   void setPixelSize(double height, double width);
   void setAxisSize(double height, double width);
-
-  void setTickCount(int count);
-  void setTickStep(double step);
-  void setSubTickCount(int count);
-  void setSubTickStep(double step);
 
 private:
   double pixelWidth;

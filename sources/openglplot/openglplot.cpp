@@ -16,24 +16,41 @@ OpenGLPlot::OpenGLPlot(QWidget *parent): QOpenGLWidget(parent)
   mouseMove = 0;
   mousePressPos = 0;
 
-  double min = 1900;
-  double max = 16000;
+  double minX = 0;
+  double maxX = 5;
 
-  double tickStep = getTickStep(min, max, 5);
+  double minY = 0;
+  double maxY = 5;
 
-  std::vector<double> tickPosVector = createTickPosVector(tickStep, min, max);
-  for (uint i=0; i<tickPosVector.size(); ++i)
-  {
-    printf("tick pos: %f\n", tickPosVector.at(i));
-  }
-  printf("\n");
+  double tickStepX = getTickStep(minX, maxX, 5);
+  double tickStepY = getTickStep(minY, maxY, 5);
 
-  std::vector<double> subTickPosVector = createSubTickPosVector(tickStep, tickPosVector, min, max);
+  std::vector<double> tickPosXVector = createTickPosVector(tickStepX, minX, maxX);
+//  for (uint i=0; i<tickPosXVector.size(); ++i)
+//  {
+//    printf("X tick pos: %f\n", tickPosXVector.at(i));
+//  }
+//  printf("\n");
 
-  for(uint i = 0; i < subTickPosVector.size(); i++)
-    {
-      printf("subtick pos: %f\n", subTickPosVector[i]);
-    }
+  std::vector<double> tickPosYVector = createTickPosVector(tickStepY, minY, maxY);
+//  for (uint i=0; i<tickPosYVector.size(); ++i)
+//  {
+//    printf("Y tick pos: %f\n", tickPosYVector.at(i));
+//  }
+//  printf("\n");
+
+  std::vector<double> subTickXPosVector = createSubTickPosVector(tickStepX, tickPosXVector, minX, maxX);
+//  for(uint i = 0; i < subTickXPosVector.size(); i++)
+//    {
+//      printf("X subtick pos: %f\n", subTickXPosVector[i]);
+//    }
+//  printf("\n");
+
+  std::vector<double> subTickYPosVector = createSubTickPosVector(tickStepY, tickPosYVector, minY, maxY);
+//  for(uint i = 0; i < subTickYPosVector.size()-1; i++)
+//    {
+//      printf("Y subtick pos: %f\n", subTickYPosVector[i]);
+//    }
 }
 
 
@@ -48,7 +65,6 @@ OpenGLPlot::~OpenGLPlot()
   glDeleteBuffers(1, &VBO);
 
 }
-
 
 
 /*!
@@ -391,12 +407,9 @@ void OpenGLPlot::setData(std::vector<float> &keys, std::vector<float> &values)
 
 void OpenGLPlot::setYRange(float min, float max)
 {
-  if(sizeRange.yRange.lower != min)
+  if((sizeRange.yRange.lower != min) && (sizeRange.yRange.upper != max))
     {
       sizeRange.yRange.lower = min;
-    }
-  if(sizeRange.yRange.upper != max)
-    {
       sizeRange.yRange.upper = max;
     }
 }
@@ -404,12 +417,9 @@ void OpenGLPlot::setYRange(float min, float max)
 
 void OpenGLPlot::setXRange(float min, float max)
 {
-  if(sizeRange.xRange.lower != min)
+  if((sizeRange.xRange.lower != min) && (sizeRange.xRange.upper != max))
     {
       sizeRange.xRange.lower = min;
-    }
-  if(sizeRange.xRange.upper != max)
-    {
       sizeRange.xRange.upper = max;
     }
 }
@@ -676,21 +686,28 @@ std::vector<double> createSubTickPosVector(double tickStep, std::vector<double> 
 {
   int subPerTickCount = getSubTickCount(tickStep);
   double subTickStep = getSubTickStep(tickStep, subPerTickCount);
-
+  int addFront = 0;
+  int addBack = 0;
   std::vector<double> subTickPosVector;
-  int addFront = std::floor((ticks.front() - minNum)/subTickStep);
-  int addBack = std::floor((maxNum - ticks.back())/subTickStep);
+
+  if(subTickStep > 0)
+    {
+      addFront = std::floor((ticks.front() - minNum)/subTickStep);
+      addBack = std::floor((maxNum - ticks.back())/subTickStep);
+    }
+
   int subTickCount = addFront + ((ticks.size() - 1) * subPerTickCount) + addBack;
+  if(subTickCount <= 0) return std::vector<double>();
 
   subTickPosVector.reserve(subTickCount);
-  for(int i = 1; i < addFront + 1; ++i)
+  for(int i = addFront; i > 0; --i)
     {
       subTickPosVector.push_back(ticks[0] - i * subTickStep);
     }
 
-  for(uint i = 0; i < ticks.size()-1; ++i)
+  for(uint i = 0; i < ticks.size() - 1; ++i)
     {
-      for(int j = 1; j < subPerTickCount+1; ++j)
+      for(int j = 1; j < subPerTickCount + 1; ++j)
         {
           subTickPosVector.push_back(ticks[i] + j * subTickStep);
         }
